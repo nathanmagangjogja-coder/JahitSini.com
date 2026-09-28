@@ -199,5 +199,6 @@ Radius: `rounded-xl` (12px) untuk tombol/input, `rounded-2xl` (16px) untuk card/
 
 ## 📄 Lisensi
 
-© 2026 Jahitsini.com - All rights reserved.#   J a h i t s i n i . c o m - p r i m e -  
+© 2026 Jahitsini.com - All rights reserved.#   J a h i t s i n i . c o m - p r i m e - 
+ 
  
