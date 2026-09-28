@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f3fbf6;
+  --foreground: #172033;
+}
+
+body {
+  color: var(--foreground);
+  background:
+    linear-gradient(180deg, rgba(234, 249, 239, 0.92) 0%, rgba(255, 255, 255, 0.98) 38%, rgba(246, 250, 248, 1) 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer utilities {
+  .container-app {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+}

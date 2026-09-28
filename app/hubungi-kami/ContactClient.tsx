@@ -1,0 +1,368 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import {
+  MessageCircle,
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  Send,
+  ArrowRight,
+  Loader2,
+} from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Input, Textarea } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
+import { sanitizeName, sanitizePhone, isValidName, isValidPhone } from "@/lib/inputGuards";
+import { sendContactMessage } from "@/lib/contact";
+
+interface ContactClientProps {
+  whatsapp: string;
+  phone: string;
+  email: string;
+  address: string;
+}
+
+export default function ContactClient({
+  whatsapp,
+  phone,
+  email,
+  address,
+}: ContactClientProps) {
+  const showAvailable = !whatsapp && !phone && !email && !address;
+  const { toast } = useToast();
+  const [submitting, setSubmitting] = React.useState(false);
+  const lastWarnRef = React.useRef<{ name: number; phone: number }>({ name: 0, phone: 0 });
+
+  const warnOnce = (field: "name" | "phone", title: string, description: string) => {
+    const now = Date.now();
+    if (now - lastWarnRef.current[field] > 1200) {
+      toast({ variant: "error", title, description });
+      lastWarnRef.current[field] = now;
+    }
+  };
+  const [form, setForm] = React.useState({
+    name: "",
+    phone: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.phone.trim() || !form.subject.trim() || !form.message.trim()) {
+      toast({
+        variant: "error",
+        title: "Formulir belum lengkap",
+        description: "Nama, WhatsApp, subjek, dan pesan wajib diisi.",
+      });
+      return;
+    }
+    if (!isValidName(form.name)) {
+      toast({ variant: "error", title: "Nama belum valid", description: "Nama minimal 3 huruf, tanpa angka atau simbol aneh." });
+      return;
+    }
+    if (!isValidPhone(form.phone)) {
+      toast({ variant: "error", title: "Nomor WhatsApp belum valid", description: "Isi 9-15 digit angka." });
+      return;
+    }
+    setSubmitting(true);
+    const ok = await sendContactMessage({
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      email: form.email.trim() || undefined,
+      subject: form.subject.trim(),
+      message: form.message.trim(),
+    });
+    setSubmitting(false);
+
+    if (ok) {
+      toast({
+        variant: "success",
+        title: "Pesan terkirim!",
+        description: "Tim kami akan merespons secepatnya (maks. 1x24 jam kerja).",
+      });
+      setForm({ name: "", phone: "", email: "", subject: "", message: "" });
+    } else {
+      toast({
+        variant: "error",
+        title: "Gagal mengirim pesan",
+        description: "Silakan coba lagi, atau hubungi kami langsung via WhatsApp.",
+      });
+    }
+  };
+
+  return (
+    <>
+      <section className="relative border-b border-brand-border/60 bg-gradient-to-b from-brand-bg/80 via-white to-white">
+        <div className="container-app pt-14 pb-16 sm:pt-16 sm:pb-20">
+          <div className="max-w-3xl">
+            <Badge variant="success" className="mb-4 px-3 py-1.5">
+              <MessageCircle className="h-3.5 w-3.5" />
+              Kontak Kami
+            </Badge>
+            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-brand-text">
+              Hubungi <span className="text-brand-green">Kami Sekarang</span>
+            </h1>
+            <p className="mt-4 text-lg text-slate-600 leading-relaxed max-w-2xl">
+              Konsultasikan kebutuhan jahitmu secara gratis. Kami siap membantu
+              memilihkan layanan yang tepat dan memberikan estimasi biaya awal.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="container-app py-12 sm:py-16">
+        <div className="grid lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-2 space-y-4">
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="aspect-[4/3] bg-gradient-to-br from-brand-bg via-emerald-50 to-green-100 relative">
+                  <div className="absolute inset-0 flex items-center justify-center p-8">
+                    <div className="w-full max-w-xs rounded-2xl bg-white/60 backdrop-blur border border-white/80 p-5 shadow-soft">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-green to-emerald-400 text-white flex items-center justify-center shadow-soft">
+                          <MapPin className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="text-xs text-slate-500">Workshop</div>
+                          <div className="text-sm font-bold text-brand-text">
+                            Jahitsini.com
+                          </div>
+                        </div>
+                      </div>
+                      <div className="h-32 rounded-xl bg-white/80 border border-dashed border-brand-border flex items-center justify-center">
+                        <div className="text-center px-4">
+                          <MapPin className="h-8 w-8 text-brand-green mx-auto mb-2" />
+                          <p className="text-xs text-slate-500">
+                            {showAvailable
+                              ? "Peta lokasi segera tersedia"
+                              : "Peta Lokasi Workshop"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-1 gap-4">
+              <Card>
+                <CardContent className="p-5 flex items-start gap-3">
+                  <div className="h-11 w-11 shrink-0 rounded-xl bg-green-50 text-brand-green flex items-center justify-center">
+                    <Phone className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-brand-text">Telepon / WA</h3>
+                    <p className="text-sm mt-1">
+                      {showAvailable ? (
+                        <span className="text-slate-500 italic">
+                          Segera tersedia
+                        </span>
+                      ) : (
+                        <span className="text-slate-700">{phone || whatsapp}</span>
+                      )}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-5 flex items-start gap-3">
+                  <div className="h-11 w-11 shrink-0 rounded-xl bg-blue-50 text-brand-blue flex items-center justify-center">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-brand-text">Email</h3>
+                    <p className="text-sm mt-1">
+                      {showAvailable ? (
+                        <span className="text-slate-500 italic">
+                          Segera tersedia
+                        </span>
+                      ) : (
+                        <span className="text-slate-700">{email}</span>
+                      )}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-5 flex items-start gap-3">
+                  <div className="h-11 w-11 shrink-0 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-brand-text">Jam Operasional</h3>
+                    <ul className="text-sm text-slate-600 mt-1 space-y-0.5">
+                      <li>Senin - Jumat: 08.00 - 17.00</li>
+                      <li>Sabtu: 08.00 - 14.00</li>
+                      <li>Minggu: Tutup</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-5 flex items-start gap-3">
+                  <div className="h-11 w-11 shrink-0 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-brand-text">Alamat Workshop</h3>
+                    <p className="text-sm text-slate-600 mt-1">
+                      {showAvailable ? (
+                        <span className="italic">Segera tersedia</span>
+                      ) : (
+                        <span>{address}</span>
+                      )}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          <div className="lg:col-span-3">
+            <Card className="h-full">
+              <CardContent className="p-6 sm:p-8 space-y-6">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-brand-text">
+                    Kirim Pesan untuk Kami
+                  </h2>
+                  <p className="mt-2 text-slate-600">
+                    Isi formulir di bawah untuk konsultasi atau tanya jawab. Tim
+                    kami akan merespons secepatnya (maks. 1x24 jam kerja).
+                  </p>
+                </div>
+
+                <form
+                  className="space-y-4"
+                  onSubmit={handleSubmit}
+                >
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-brand-text">
+                        Nama Lengkap
+                      </label>
+                      <Input
+                        placeholder="Masukkan namamu..."
+                        value={form.name}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const clean = sanitizeName(raw);
+                          if (clean !== raw) warnOnce("name", "Nama hanya boleh huruf", "Angka dan simbol otomatis dihapus.");
+                          setForm((f) => ({ ...f, name: clean }));
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-brand-text">
+                        Nomor WhatsApp
+                      </label>
+                      <Input
+                        placeholder="Contoh: 081234567890"
+                        type="tel"
+                        inputMode="numeric"
+                        value={form.phone}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const clean = sanitizePhone(raw);
+                          if (clean !== raw) warnOnce("phone", "Nomor WhatsApp hanya boleh angka", "Huruf dan simbol otomatis dihapus.");
+                          setForm((f) => ({ ...f, phone: clean }));
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-brand-text">
+                      Email (opsional)
+                    </label>
+                    <Input
+                      placeholder="email@contoh.com"
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-brand-text">
+                      Subjek Pesan
+                    </label>
+                    <Input
+                      placeholder="Contoh: Konsultasi permak jas pengantin..."
+                      value={form.subject}
+                      onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-brand-text">
+                      Detail Pesan
+                    </label>
+                    <Textarea
+                      placeholder="Jelaskan kebutuhan jahitmu: jenis pakaian, bagian yang diperbaiki, ukuran, dll..."
+                      rows={6}
+                      value={form.message}
+                      onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                    <p className="text-xs text-slate-500 max-w-sm">
+                      Dengan mengirim formulir ini, kamu setuju data digunakan
+                      hanya untuk keperluan komunikasi terkait pesanan.
+                    </p>
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="w-full sm:w-auto"
+                      disabled={submitting}
+                    >
+                      {submitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      {submitting ? "Mengirim..." : "Kirim Pesan"}
+                    </Button>
+                  </div>
+                </form>
+
+                <div className="pt-6 mt-2 border-t border-brand-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="font-semibold text-brand-text">
+                      Butuh Respon Cepat?
+                    </h4>
+                    <p className="text-sm text-slate-600 mt-0.5">
+                      Pesan langsung via WhatsApp untuk respon tercepat.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    asChild
+                    disabled={showAvailable}
+                  >
+                    <Link
+                      href={
+                        showAvailable
+                          ? "#"
+                          : `https://wa.me/${whatsapp?.replace(/\D/g, "") || ""}`
+                      }
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      {showAvailable ? "WA Segera Tersedia" : "Chat via WhatsApp"}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
