@@ -11,6 +11,8 @@ import {
   Send,
   ArrowRight,
   Loader2,
+  CheckCircle2,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -19,6 +21,8 @@ import { Input, Textarea } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import { sanitizeName, sanitizePhone, isValidName, isValidPhone } from "@/lib/inputGuards";
 import { sendContactMessage } from "@/lib/contact";
+import { getContactWhatsAppLink } from "@/lib/whatsappOrder";
+import { WorkshopMap } from "@/components/shared/WorkshopMap";
 
 interface ContactClientProps {
   whatsapp: string;
@@ -36,6 +40,8 @@ export default function ContactClient({
   const showAvailable = !whatsapp && !phone && !email && !address;
   const { toast } = useToast();
   const [submitting, setSubmitting] = React.useState(false);
+  const [waLink, setWaLink] = React.useState<string | null>(null);
+  const [sentOpen, setSentOpen] = React.useState(false);
   const lastWarnRef = React.useRef<{ name: number; phone: number }>({ name: 0, phone: 0 });
 
   const warnOnce = (field: "name" | "phone", title: string, description: string) => {
@@ -72,28 +78,31 @@ export default function ContactClient({
       return;
     }
     setSubmitting(true);
-    const ok = await sendContactMessage({
+    const contactInput = {
       name: form.name.trim(),
       phone: form.phone.trim(),
       email: form.email.trim() || undefined,
       subject: form.subject.trim(),
       message: form.message.trim(),
-    });
+    };
+
+    // Tersimpan sebagai arsip di Admin > Pesan (opsional; kegagalan simpan tidak
+    // menghalangi pelanggan mengirim pertanyaannya ke WhatsApp).
+    await sendContactMessage(contactInput);
+    const link = await getContactWhatsAppLink(contactInput);
     setSubmitting(false);
 
-    if (ok) {
-      toast({
-        variant: "success",
-        title: "Pesan terkirim!",
-        description: "Tim kami akan merespons secepatnya (maks. 1x24 jam kerja).",
-      });
+    if (link) {
+      setWaLink(link);
+      setSentOpen(true);
       setForm({ name: "", phone: "", email: "", subject: "", message: "" });
     } else {
       toast({
         variant: "error",
-        title: "Gagal mengirim pesan",
-        description: "Silakan coba lagi, atau hubungi kami langsung via WhatsApp.",
+        title: "Nomor WhatsApp belum diatur",
+        description: "Pertanyaanmu tersimpan, tim kami akan menghubungi lewat nomor WhatsApp yang kamu isi.",
       });
+      setForm({ name: "", phone: "", email: "", subject: "", message: "" });
     }
   };
 
@@ -122,32 +131,12 @@ export default function ContactClient({
           <div className="lg:col-span-2 space-y-4">
             <Card className="overflow-hidden">
               <CardContent className="p-0">
-                <div className="aspect-[4/3] bg-gradient-to-br from-brand-bg via-emerald-50 to-green-100 relative">
-                  <div className="absolute inset-0 flex items-center justify-center p-8">
-                    <div className="w-full max-w-xs rounded-2xl bg-white/60 backdrop-blur border border-white/80 p-5 shadow-soft">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-green to-emerald-400 text-white flex items-center justify-center shadow-soft">
-                          <MapPin className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <div className="text-xs text-slate-500">Workshop</div>
-                          <div className="text-sm font-bold text-brand-text">
-                            Jahitsini.com
-                          </div>
-                        </div>
-                      </div>
-                      <div className="h-32 rounded-xl bg-white/80 border border-dashed border-brand-border flex items-center justify-center">
-                        <div className="text-center px-4">
-                          <MapPin className="h-8 w-8 text-brand-green mx-auto mb-2" />
-                          <p className="text-xs text-slate-500">
-                            {showAvailable
-                              ? "Peta lokasi segera tersedia"
-                              : "Peta Lokasi Workshop"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                {/* min-height + style aspectRatio sengaja dobel dengan class Tailwind di bawah:
+                    jaga-jaga kalau class arbitrary "aspect-[4/3]" tidak ikut ter-build, kotak
+                    peta tidak collapse jadi tinggi 0px (yang akan terlihat seperti "peta kosong"
+                    padahal datanya sudah benar). */}
+                <div className="aspect-[4/3] min-h-[280px]" style={{ aspectRatio: "4 / 3" }}>
+                  <WorkshopMap />
                 </div>
               </CardContent>
             </Card>
@@ -363,6 +352,50 @@ export default function ContactClient({
           </div>
         </div>
       </section>
+
+      {sentOpen && (
+        <div className="fixed inset-0 z-[90] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-card w-full max-w-md max-h-[92vh] overflow-y-auto">
+            <div className="p-5 pb-0 flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <span className="h-10 w-10 shrink-0 rounded-full bg-green-50 text-brand-green flex items-center justify-center">
+                  <CheckCircle2 className="h-5 w-5" />
+                </span>
+                <div>
+                  <div className="font-bold text-brand-text">Pertanyaan siap dikirim!</div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Satu langkah lagi untuk sampai ke admin kami.
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setSentOpen(false)}
+                className="text-slate-400 hover:text-slate-600 shrink-0"
+                aria-label="Tutup"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-5">
+              <p className="text-sm text-slate-600 mb-4">
+                Klik tombol di bawah untuk mengirim pertanyaanmu ke WhatsApp kami. Tim kami akan
+                merespons langsung dari sana.
+              </p>
+              {waLink && (
+                <Button asChild size="lg" className="w-full">
+                  <a href={waLink} target="_blank" rel="noopener noreferrer" onClick={() => setSentOpen(false)}>
+                    <MessageCircle className="h-4 w-4" />
+                    Kirim via WhatsApp
+                  </a>
+                </Button>
+              )}
+              <Button variant="outline" className="w-full mt-3" onClick={() => setSentOpen(false)}>
+                Tutup
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

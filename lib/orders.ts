@@ -558,6 +558,28 @@ export async function getOrdersByCustomerRemote(phone: string): Promise<Order[]>
   return mergeOrders(localOrders, getOrdersByCustomer(phone));
 }
 
+/**
+ * Hapus pesanan secara permanen lewat API admin.
+ * Server hanya mengizinkan ini untuk pesanan berstatus "Dibatalkan", jadi
+ * ubah status ke Dibatalkan lebih dulu sebelum memanggil ini.
+ */
+export async function deleteOrderRemote(
+  orderNumber: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`/api/secure/admin/orders/${encodeURIComponent(orderNumber)}`, {
+      method: "DELETE",
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.success) {
+      return { ok: false, error: json?.error || `Gagal menghapus (${res.status})` };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Gagal terhubung ke server." };
+  }
+}
+
 /** Hasil notifikasi WhatsApp otomatis (saat status diubah ke "Selesai"). */
 export interface OrderNotifyResult {
   sent: boolean;

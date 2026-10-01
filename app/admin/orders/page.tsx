@@ -4,15 +4,15 @@ import * as React from "react";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  Search, RotateCw, Eye, Edit, Check, Loader2, MessageCircle, Send, ArrowLeft,
+  Search, RotateCw, Eye, Edit, Check, Loader2, MessageCircle, Send, ArrowLeft, Trash2,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Input, Select } from "@/components/ui/Input";
-import { getAllOrdersRemote, updateOrderRemote, sendAdminReply, subscribeToOrder, Order, type OrderNotifyResult } from "@/lib/orders";
-import { statusLabels, OrderStatus, statusTimeline } from "@/lib/data";
+import { getAllOrdersRemote, updateOrderRemote, deleteOrderRemote, sendAdminReply, subscribeToOrder, Order, type OrderNotifyResult } from "@/lib/orders";
+import { statusLabels, OrderStatus, statusTimeline, orderStatusOptions } from "@/lib/data";
 import { formatRupiah } from "@/lib/utils";
 import { OrderTimeline } from "@/components/ui/OrderTimeline";
 import { useToast } from "@/components/ui/Toast";
@@ -32,6 +32,7 @@ function AdminOrdersPageInner() {
   const [newPrice, setNewPrice] = React.useState("");
   const [newNote, setNewNote] = React.useState("");
   const [applying, setApplying] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
   const [chatInput, setChatInput] = React.useState("");
   const [sendingChat, setSendingChat] = React.useState(false);
   const [detailOrder, setDetailOrder] = React.useState<Order | null>(null);
@@ -61,7 +62,7 @@ function AdminOrdersPageInner() {
     paramsApplied.current = true;
     const num = searchParams.get("order");
     const st = searchParams.get("status");
-    if (st && (statusTimeline as string[]).includes(st)) {
+    if (st && (orderStatusOptions as string[]).includes(st)) {
       setStatusFilter(st);
       const first = orders.find((o) => o.status === st);
       if (first && !num) setSelectedId(first.id);
@@ -165,6 +166,26 @@ function AdminOrdersPageInner() {
     setNewNote("");
   };
 
+  const handleDelete = async () => {
+    if (!selected) return;
+    const sure = window.confirm(
+      `Hapus pesanan ${selected.orderNumber} secara permanen? Tindakan ini tidak bisa dibatalkan.`
+    );
+    if (!sure) return;
+
+    setDeleting(true);
+    const result = await deleteOrderRemote(selected.orderNumber);
+    setDeleting(false);
+
+    if (result.ok) {
+      toast({ variant: "success", title: "Pesanan dihapus" });
+      setSelectedId(null);
+      await loadOrders();
+    } else {
+      toast({ variant: "error", title: "Gagal menghapus", description: result.error });
+    }
+  };
+
   return (
     <DashboardLayout
       type="admin"
@@ -189,7 +210,7 @@ function AdminOrdersPageInner() {
               className="w-full sm:w-48"
             >
               <option value="all">Semua Status</option>
-              {statusTimeline.map((s) => (
+              {orderStatusOptions.map((s) => (
                 <option key={s} value={s}>
                   {statusLabels[s].label}
                 </option>
@@ -323,9 +344,39 @@ function AdminOrdersPageInner() {
                   <Edit className="h-4 w-4" />
                 </Button>
                 <OrderActionsMenu order={selected} onView={() => setDetailOrder(selected)} />
+                {selected.status === "cancelled" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="!h-8 !w-8 !p-0 text-red-500 hover:bg-red-50 hover:text-red-600"
+                    aria-label="Hapus pesanan"
+                    title="Hapus pesanan"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent className="pt-0 p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+              {selected.status === "cancelled" && !editStatus && (
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5">
+                  <p className="text-xs text-red-700">
+                    Pesanan ini dibatalkan. Hapus permanen kalau sudah tidak diperlukan.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="!h-7 shrink-0 border-red-300 text-red-600 hover:bg-red-100"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                    Hapus Pesanan
+                  </Button>
+                </div>
+              )}
               {!editStatus ? (
                 <>
                   <div className="space-y-2">
@@ -379,7 +430,7 @@ function AdminOrdersPageInner() {
                       onChange={(e) => setNewStatus(e.target.value as OrderStatus)}
                       className="mt-1.5"
                     >
-                      {statusTimeline.map((s) => (
+                      {orderStatusOptions.map((s) => (
                         <option key={s} value={s}>
                           {statusLabels[s].label}
                         </option>

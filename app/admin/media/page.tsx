@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
+import { compressImage, DEFAULT_PHOTO_MAX_DIMENSION } from "@/lib/imageResize";
+import { getBusinessSettingsRemote } from "@/lib/settings";
 
 interface MediaItem {
   key: string;
@@ -14,32 +16,6 @@ interface MediaItem {
   category: string;
   url: string | null;
   updatedAt: string | null;
-}
-
-const MAX_SIDE = 1600;
-
-/** Perkecil di browser (maks 1600px, JPEG) supaya upload cepat dan di bawah batas 4 MB. */
-async function compressImage(file: File): Promise<File> {
-  if (!file.type.startsWith("image/")) return file;
-  try {
-    const bmp = await createImageBitmap(file);
-    const scale = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height));
-    const w = Math.round(bmp.width * scale);
-    const h = Math.round(bmp.height * scale);
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(bmp, 0, 0, w, h);
-    const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.85));
-    if (!blob || (blob.size >= file.size && scale === 1)) return file;
-    return new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" });
-  } catch {
-    return file;
-  }
 }
 
 export default function AdminMediaPage() {
@@ -51,6 +27,12 @@ export default function AdminMediaPage() {
   const [urlValue, setUrlValue] = React.useState("");
   const fileRef = React.useRef<HTMLInputElement>(null);
   const targetKey = React.useRef<string | null>(null);
+  // Dimensi maksimum foto diambil dari Pengaturan (Admin > Pengaturan > Dimensi Foto).
+  const [maxSide, setMaxSide] = React.useState(DEFAULT_PHOTO_MAX_DIMENSION);
+
+  React.useEffect(() => {
+    getBusinessSettingsRemote().then((s) => setMaxSide(s.photoMaxDimension || DEFAULT_PHOTO_MAX_DIMENSION));
+  }, []);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -92,7 +74,7 @@ export default function AdminMediaPage() {
     if (!file || !key) return;
     setBusyKey(key);
     try {
-      const small = await compressImage(file);
+      const small = await compressImage(file, maxSide);
       const fd = new FormData();
       fd.append("key", key);
       fd.append("file", small);

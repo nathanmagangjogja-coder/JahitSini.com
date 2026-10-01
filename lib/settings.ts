@@ -7,12 +7,26 @@ export interface BusinessSettings {
   address: string;
   operatingHours: string;
   websiteUrl: string;
+  /** Koordinat lokasi workshop untuk peta embed di halaman Hubungi Kami. */
+  mapLat: number | null;
+  mapLng: number | null;
   notifyNewOrderEmail: boolean;
   notifyUrgentWhatsapp: boolean;
   notifyDailyReport: boolean;
+  /** Sisi terpanjang maksimum (px) untuk foto yang diunggah (pakaian & foto website). */
+  photoMaxDimension: number;
 }
 
 const LOCAL_SETTINGS_KEY = "jahitsini_business_settings";
+
+function parseCoordValue(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";
@@ -26,9 +40,12 @@ function envDefaults(): BusinessSettings {
     address: process.env.BUSINESS_ADDRESS || "",
     operatingHours: "Senin-Jumat: 08.00-17.00",
     websiteUrl: process.env.NEXT_PUBLIC_SITE_URL || "",
+    mapLat: null,
+    mapLng: null,
     notifyNewOrderEmail: true,
     notifyUrgentWhatsapp: true,
     notifyDailyReport: false,
+    photoMaxDimension: 1600,
   };
 }
 
@@ -65,42 +82,55 @@ export async function getBusinessSettingsRemote(): Promise<BusinessSettings> {
 
   if (error || !data) return { ...envDefaults(), ...local };
 
+  // PENTING: setelah fetch ke Supabase BERHASIL, data database adalah sumber kebenaran
+  // dan harus diutamakan. `local` (localStorage) cuma dipakai kalau kolom di database-nya
+  // kosong (mis. admin belum pernah mengisi) atau kalau fetch-nya sendiri gagal total
+  // (lihat dua early-return di atas). Sebelumnya urutannya terbalik (local selalu menang),
+  // sehingga draf lama di satu browser bisa menutupi perubahan baru di database selamanya.
   const fallback = envDefaults();
   return {
-    whatsapp: local.whatsapp ?? data.whatsapp ?? fallback.whatsapp,
-    phone: local.phone ?? data.phone ?? fallback.phone,
-    email: local.email ?? data.email ?? fallback.email,
-    address: local.address ?? data.address ?? fallback.address,
-    operatingHours: local.operatingHours ?? data.operating_hours ?? fallback.operatingHours,
-    websiteUrl: local.websiteUrl ?? data.website_url ?? fallback.websiteUrl,
-    notifyNewOrderEmail: local.notifyNewOrderEmail ?? data.notify_new_order_email ?? true,
-    notifyUrgentWhatsapp: local.notifyUrgentWhatsapp ?? data.notify_urgent_whatsapp ?? true,
-    notifyDailyReport: local.notifyDailyReport ?? data.notify_daily_report ?? false,
+    whatsapp: data.whatsapp ?? local.whatsapp ?? fallback.whatsapp,
+    phone: data.phone ?? local.phone ?? fallback.phone,
+    email: data.email ?? local.email ?? fallback.email,
+    address: data.address ?? local.address ?? fallback.address,
+    operatingHours: data.operating_hours ?? local.operatingHours ?? fallback.operatingHours,
+    websiteUrl: data.website_url ?? local.websiteUrl ?? fallback.websiteUrl,
+    // Angka dari Supabase kadang datang sebagai string tergantung tipe kolom,
+    // jadi di-parse dulu supaya peta tidak gagal muncul hanya karena typeof-nya "string".
+    mapLat: parseCoordValue(data.map_lat) ?? local.mapLat ?? fallback.mapLat,
+    mapLng: parseCoordValue(data.map_lng) ?? local.mapLng ?? fallback.mapLng,
+    notifyNewOrderEmail: data.notify_new_order_email ?? local.notifyNewOrderEmail ?? true,
+    notifyUrgentWhatsapp: data.notify_urgent_whatsapp ?? local.notifyUrgentWhatsapp ?? true,
+    notifyDailyReport: data.notify_daily_report ?? local.notifyDailyReport ?? false,
+    photoMaxDimension:
+      data.photo_max_dimension ?? local.photoMaxDimension ?? fallback.photoMaxDimension,
   };
 }
 
+/**
+ * Simpan pengaturan bisnis. HANYA dipakai di halaman /admin/settings (butuh sesi admin).
+ * Ditulis lewat /api/secure/admin/settings (service role di server), BUKAN langsung ke
+ * Supabase dari browser: sejak migration 0010_rls_tighten.sql, anon key tidak lagi boleh
+ * UPDATE tabel business_settings, jadi menulis langsung akan gagal diam-diam.
+ */
 export async function updateBusinessSettingsRemote(
   input: Partial<BusinessSettings>
 ): Promise<boolean> {
-  if (!supabase) return saveLocalSettings(input);
-  const payload: Record<string, any> = {};
-  if (input.whatsapp !== undefined) payload.whatsapp = input.whatsapp;
-  if (input.phone !== undefined) payload.phone = input.phone;
-  if (input.email !== undefined) payload.email = input.email;
-  if (input.address !== undefined) payload.address = input.address;
-  if (input.operatingHours !== undefined) payload.operating_hours = input.operatingHours;
-  if (input.websiteUrl !== undefined) payload.website_url = input.websiteUrl;
-  if (input.notifyNewOrderEmail !== undefined)
-    payload.notify_new_order_email = input.notifyNewOrderEmail;
-  if (input.notifyUrgentWhatsapp !== undefined)
-    payload.notify_urgent_whatsapp = input.notifyUrgentWhatsapp;
-  if (input.notifyDailyReport !== undefined)
-    payload.notify_daily_report = input.notifyDailyReport;
-
-  const { error } = await supabase.from("business_settings").update(payload).eq("id", 1);
-  if (error) return saveLocalSettings(input);
-  saveLocalSettings(input);
-  return true;
+  try {
+    const res = await fetch("/api/secure/admin/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const json = await res.json().catch(() => null);
+    if (res.ok && json?.success) {
+      saveLocalSettings(input); // cache lokal, dipakai fallback kalau offline
+      return true;
+    }
+  } catch {
+    // lanjut ke fallback lokal di bawah
+  }
+  return saveLocalSettings(input);
 }
 
 export function formatWhatsAppNumber(raw: string | null | undefined): string | null {

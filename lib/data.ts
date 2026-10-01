@@ -5,7 +5,8 @@ export type OrderStatus =
   | "approved"
   | "sewing"
   | "qc"
-  | "done";
+  | "done"
+  | "cancelled";
 
 export interface Service {
   id: string;
@@ -180,6 +181,7 @@ export const statusLabels: Record<OrderStatus, { label: string; color: string }>
   sewing: { label: "Proses jahit", color: "bg-purple-50 text-purple-700 border-purple-200" },
   qc: { label: "QC", color: "bg-orange-50 text-orange-700 border-orange-200" },
   done: { label: "Selesai", color: "bg-green-50 text-green-700 border-green-200" },
+  cancelled: { label: "Dibatalkan", color: "bg-red-50 text-red-700 border-red-200" },
 };
 
 export const statusTimeline: OrderStatus[] = [
@@ -191,6 +193,13 @@ export const statusTimeline: OrderStatus[] = [
   "qc",
   "done",
 ];
+
+/**
+ * Semua status yang bisa dipilih admin (dropdown filter & ubah status).
+ * "cancelled" sengaja TIDAK dimasukkan ke statusTimeline karena bukan bagian
+ * dari alur linear (dipakai indexOf untuk menghitung progress bar).
+ */
+export const orderStatusOptions: OrderStatus[] = [...statusTimeline, "cancelled"];
 
 export interface FAQItem {
   question: string;

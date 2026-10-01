@@ -9,6 +9,8 @@ import { formatRupiah, generateOrderNumber } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
 import { createOrderRemote, uploadOrderPhoto } from "@/lib/orders";
+import { compressImage, DEFAULT_PHOTO_MAX_DIMENSION } from "@/lib/imageResize";
+import { getBusinessSettingsRemote } from "@/lib/settings";
 import { getOrderWhatsAppLink } from "@/lib/whatsappOrder";
 import { useSanitizedInput, sanitizeName, sanitizePhone, isValidName, isValidPhone } from "@/lib/inputGuards";
 
@@ -27,11 +29,18 @@ export function CostCalculator({
   const { toast } = useToast();
   const [category, setCategory] = React.useState("");
   const [serviceId, setServiceId] = React.useState(initialServiceId);
-  const [difficulty, setDifficulty] = React.useState("mudah");
+  // Tingkat kesulitan sudah tidak ditampilkan ke pelanggan (semua pemesanan final
+  // ditentukan lewat WhatsApp), jadi estimasi awal selalu memakai multiplier "mudah" (1x).
+  const difficulty = "mudah";
   const [quantity, setQuantity] = React.useState(1);
   const [notes, setNotes] = React.useState("");
   const [fileName, setFileName] = React.useState("");
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  // Dimensi maksimum foto diatur admin di Pengaturan > Dimensi Foto (default 1600px).
+  const [photoMaxSide, setPhotoMaxSide] = React.useState(DEFAULT_PHOTO_MAX_DIMENSION);
+  React.useEffect(() => {
+    getBusinessSettingsRemote().then((s) => setPhotoMaxSide(s.photoMaxDimension || DEFAULT_PHOTO_MAX_DIMENSION));
+  }, []);
   const [estimated, setEstimated] = React.useState<number | null>(null);
   const [customerName, handleCustomerNameChange] = useSanitizedInput(
     "",
@@ -107,7 +116,8 @@ export function CostCalculator({
 
     let photoUrl: string | null = null;
     if (selectedFile) {
-      photoUrl = await uploadOrderPhoto(selectedFile, orderNumber);
+      const resized = await compressImage(selectedFile, photoMaxSide);
+      photoUrl = await uploadOrderPhoto(resized, orderNumber);
     }
 
     // Simpan pesanan (opsional; kalau database belum tersambung, tetap lanjut ke WhatsApp).
@@ -202,16 +212,6 @@ export function CostCalculator({
               </div>
             </>
           )}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-brand-text">Tingkat Kesulitan</label>
-            <Select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-              {Object.entries(difficultyMultiplier).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v.label}
-                </option>
-              ))}
-            </Select>
-          </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-brand-text">Jumlah Pakaian</label>
             <Input

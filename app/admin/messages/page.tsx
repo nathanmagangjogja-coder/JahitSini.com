@@ -10,8 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import {
   ContactMessage,
-  getAllContactMessages,
-  markContactMessageRead,
+  getAllContactMessagesAdmin,
+  markContactMessageReadAdmin,
 } from "@/lib/contact";
 import { useToast } from "@/components/ui/Toast";
 
@@ -23,13 +23,18 @@ export default function AdminMessagesPage() {
   const [markingId, setMarkingId] = React.useState<string | null>(null);
 
   const loadMessages = React.useCallback(async () => {
-    const data = await getAllContactMessages();
+    const data = await getAllContactMessagesAdmin();
     setMessages(data);
     setLoading(false);
   }, []);
 
   React.useEffect(() => {
     loadMessages();
+    // Pesan baru dari formulir Hubungi Kami muncul otomatis tanpa refresh manual.
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") loadMessages();
+    }, 15000);
+    return () => clearInterval(id);
   }, [loadMessages]);
 
   const filtered = messages.filter((message) => {
@@ -47,7 +52,7 @@ export default function AdminMessagesPage() {
 
   const handleMarkRead = async (messageId: string) => {
     setMarkingId(messageId);
-    const ok = await markContactMessageRead(messageId);
+    const ok = await markContactMessageReadAdmin(messageId);
     setMarkingId(null);
     if (ok) {
       setMessages((prev) =>

@@ -243,3 +243,66 @@ export async function PATCH(
     );
   }
 }
+
+/**
+ * Hapus pesanan secara permanen.
+ * Sengaja hanya diizinkan untuk pesanan berstatus "cancelled" (dicek di server,
+ * bukan cuma di UI) supaya pesanan aktif tidak bisa terhapus tidak sengaja.
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { orderNumber: string } }
+) {
+  try {
+    const isAdmin = await validateAdminSession(request);
+    if (!isAdmin) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const orderNumber = params.orderNumber;
+    const sb = await getServiceRoleOrThrow();
+
+    const { data: currentRow, error: fetchErr } = await sb
+      .from("orders")
+      .select("id,status")
+      .eq("order_number", orderNumber)
+      .maybeSingle();
+
+    if (fetchErr || !currentRow) {
+      return NextResponse.json({ success: false, error: "Order tidak ditemukan" }, { status: 404 });
+    }
+
+    if (currentRow.status !== "cancelled") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Hanya pesanan berstatus \"Dibatalkan\" yang bisa dihapus. Ubah status dulu.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const { error: deleteErr } = await sb.from("orders").delete().eq("order_number", orderNumber);
+    if (deleteErr) {
+      console.error("DELETE /api/secure/admin/orders/[orderNumber]:", deleteErr);
+      return NextResponse.json(
+        {
+          success: false,
+          error: process.env.NODE_ENV === "development" ? deleteErr.message : "Gagal menghapus pesanan",
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    if (process.env.NODE_ENV === "development") {
+      console.error("DELETE /api/secure/admin/orders/[orderNumber]:", err);
+    }
+    return NextResponse.json(
+      { success: false, error: process.env.NODE_ENV === "development" ? message : "Internal error" },
+      { status: 500 }
+    );
+  }
+}

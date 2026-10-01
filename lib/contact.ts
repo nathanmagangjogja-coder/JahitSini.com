@@ -117,3 +117,34 @@ export async function markContactMessageRead(messageId: string): Promise<boolean
   if (error) return updateLocal();
   return true;
 }
+
+/**
+ * Versi ADMIN dari dua fungsi di atas: lewat /api/secure/admin/messages,
+ * yang berjalan di server dengan service role + verifikasi sesi admin.
+ * Dipakai khusus di halaman /admin/messages, karena browser (anon key)
+ * tidak diizinkan RLS membaca tabel contact_messages secara langsung.
+ */
+export async function getAllContactMessagesAdmin(): Promise<ContactMessage[]> {
+  try {
+    const res = await fetch("/api/secure/admin/messages", { cache: "no-store" });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.success) return [];
+    return (json.data || []) as ContactMessage[];
+  } catch {
+    return [];
+  }
+}
+
+export async function markContactMessageReadAdmin(messageId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/secure/admin/messages/${encodeURIComponent(messageId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_read: true }),
+    });
+    const json = await res.json().catch(() => null);
+    return res.ok && !!json?.success;
+  } catch {
+    return false;
+  }
+}

@@ -38,3 +38,30 @@ export async function getOrderWhatsAppLink(o: WhatsAppOrderInput): Promise<strin
   const settings = await getBusinessSettingsRemote();
   return buildWhatsAppLink(settings, buildOrderMessage(o));
 }
+
+export interface WhatsAppContactInput {
+  name: string;
+  phone: string;
+  email?: string;
+  subject: string;
+  message: string;
+}
+
+/** Susun teks pertanyaan/konsultasi (formulir Hubungi Kami) untuk dikirim ke WhatsApp admin. */
+export function buildContactMessage(c: WhatsAppContactInput): string {
+  const lines = [
+    "Halo Jahitsini, saya ingin bertanya.",
+    "",
+    `Nama: ${c.name}`,
+    `No. WhatsApp: ${c.phone}`,
+  ];
+  if (c.email) lines.push(`Email: ${c.email}`);
+  lines.push(`Subjek: ${c.subject}`, "", c.message);
+  return lines.join("\n");
+}
+
+/** Buat link wa.me ke nomor bisnis dengan pertanyaan dari formulir Hubungi Kami terisi otomatis. */
+export async function getContactWhatsAppLink(c: WhatsAppContactInput): Promise<string | null> {
+  const settings = await getBusinessSettingsRemote();
+  return buildWhatsAppLink(settings, buildContactMessage(c));
+}
