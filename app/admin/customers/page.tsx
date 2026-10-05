@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Input, Select } from "@/components/ui/Input";
 import { getAllOrdersRemote, Order } from "@/lib/orders";
-import { formatRupiah } from "@/lib/utils";
 
 export default function AdminCustomersPage() {
   const [orders, setOrders] = React.useState<Order[]>([]);
@@ -29,18 +28,15 @@ export default function AdminCustomersPage() {
     phone: string;
     email?: string;
     orders: Order[];
-    total: number;
     lastOrder: string;
     activeOrders: number;
   }>();
 
   orders.forEach((o) => {
     const existing = customerMap.get(o.customerPhone);
-    const amount = o.priceFinal || o.priceEstimate || 0;
     const isActive = o.status !== "done";
     if (existing) {
       existing.orders.push(o);
-      existing.total += amount;
       if (isActive) existing.activeOrders += 1;
       if (o.createdAt > existing.lastOrder) existing.lastOrder = o.createdAt;
     } else {
@@ -49,7 +45,6 @@ export default function AdminCustomersPage() {
         phone: o.customerPhone,
         email: o.customerEmail,
         orders: [o],
-        total: amount,
         lastOrder: o.createdAt,
         activeOrders: isActive ? 1 : 0,
       });
@@ -73,14 +68,13 @@ export default function AdminCustomersPage() {
 
   const handleExport = () => {
     if (customers.length === 0) return;
-    const header = ["Nama", "No. WhatsApp", "Email", "Tier", "Jumlah Pesanan", "Total Belanja", "Pesanan Terakhir"];
+    const header = ["Nama", "No. WhatsApp", "Email", "Tier", "Jumlah Pesanan", "Pesanan Terakhir"];
     const rows = customers.map((c) => [
       c.name,
       c.phone,
       c.email || "-",
       c.tier,
       String(c.orders.length),
-      String(c.total),
       new Date(c.lastOrder).toLocaleDateString("id-ID"),
     ]);
     const csv = [header, ...rows]
@@ -107,7 +101,7 @@ export default function AdminCustomersPage() {
     <DashboardLayout
       type="admin"
       title="Kelola Pelanggan"
-      subtitle="Lihat data pelanggan, riwayat pesanan, dan total belanja"
+      subtitle="Lihat data pelanggan, riwayat pesanan, dan tier"
     >
       <Card className="mb-6">
         <CardContent className="p-4 sm:p-5 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
@@ -213,10 +207,6 @@ export default function AdminCustomersPage() {
                   <div>
                     <div className="text-[11px] text-slate-500">Jumlah Pesanan</div>
                     <div className="font-bold text-brand-text">{c.orders.length}x</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-500">Total Belanja</div>
-                    <div className="font-bold text-brand-green">{formatRupiah(c.total)}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">

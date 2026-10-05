@@ -2,28 +2,14 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/Button";
 
-import {
-  Scissors,
-  Sparkles,
-  CheckCircle2,
-  TrendingUp,
-  Users,
-  PackageCheck,
-  ArrowRight,
-  Clock,
-  ShieldCheck,
-  HandCoins,
-  HelpCircle,
-} from "lucide-react";
+import { Scissors, Sparkles, CheckCircle2, TrendingUp, Users, PackageCheck, ArrowRight, Clock, ShieldCheck, BadgeCheck } from "lucide-react";
 
-import { services, categories, faqItems } from "@/lib/data";
+import { services, categories } from "@/lib/data";
 import { getSiteImages, pickSiteImage } from "@/lib/siteImages";
 import { SiteImage } from "@/components/ui/SiteImage";
 import { Card, CardContent } from "@/components/ui/Card";
 import { ServiceIcon } from "@/components/ui/ServiceIcon";
-import { formatRupiah } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
-import { Accordion, AccordionItem } from "@/components/ui/Accordion";
 
 /* -------------------------------------------------------------------------- */
 /*  Data statis                                                               */
@@ -188,7 +174,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
             {[
               { icon: ShieldCheck, title: "Kualitas Terjamin", desc: "Setiap jahitan melewati QC ketat." },
-              { icon: HandCoins, title: "Harga Transparan", desc: "Estimasi jelas, tanpa biaya tersembunyi." },
+              { icon: BadgeCheck, title: "Detail Jelas", desc: "Pesan WA untuk info layanan & jadwal." },
               { icon: Clock, title: "Pengerjaan Cepat", desc: "Rata-rata selesai dalam 1-3 hari." },
               { icon: Users, title: "Penjahit Ahli", desc: "Ditangani tim berpengalaman 5+ tahun." },
             ].map((f) => (
@@ -258,13 +244,7 @@ export default async function HomePage() {
                       {s.description}
                     </p>
                   </div>
-                  <div className="flex items-center justify-between pt-3 border-t border-brand-border/60">
-                    <div>
-                      <div className="text-[11px] text-slate-400">Mulai dari</div>
-                      <div className="font-extrabold text-brand-text">
-                        {formatRupiah(s.priceStart)}
-                      </div>
-                    </div>
+                  <div className="flex items-center justify-end pt-3 border-t border-brand-border/60">
                     <div className="text-xs text-slate-500 flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" />
                       {s.duration}
@@ -400,8 +380,8 @@ export default async function HomePage() {
                   Jangan dibuang, <span className="underline decoration-white/40 underline-offset-4">perbaiki saja!</span>
                 </h2>
                 <p className="text-white/90 max-w-lg leading-relaxed">
-                  Konsultasikan kebutuhan jahitmu sekarang. Dapatkan estimasi biaya cepat dan
-                  pengerjaan oleh penjahit profesional berpengalaman.
+                  Konsultasikan kebutuhan jahitmu sekarang. Chat WhatsApp langsung untuk
+                  info detail dan pengerjaan oleh penjahit profesional berpengalaman.
                 </p>
                 <div className="flex flex-wrap gap-3 pt-2">
                   <Button

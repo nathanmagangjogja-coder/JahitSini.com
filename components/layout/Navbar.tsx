@@ -21,10 +21,12 @@ export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [waLink, setWaLink] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     getBusinessSettingsRemote().then((settings: BusinessSettings) => {
       setWaLink(buildWhatsAppLink(settings, "Halo Jahitsini, saya ingin konsultasi."));
+      setLogoUrl(settings.logoUrl || null);
     });
   }, []);
 
@@ -44,7 +46,11 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-brand-border/60 bg-white/80 backdrop-blur-md">
       <div className="container-app flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2" aria-label="Jahitsini.com - Beranda">
+        <Link href="/" className="flex items-center gap-2" aria-label="Jahitsini.com - Beranda">{logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="Jahitsini.com" className="h-10 w-auto max-w-[180px] object-contain" />
+          ) : (
+          <>
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-green to-emerald-400 shadow-soft">
             <Scissors className="h-5 w-5 text-white" aria-hidden="true" />
           </span>
@@ -56,7 +62,8 @@ export default function Navbar() {
               Jahit & Permak Profesional
             </span>
           </div>
-        </Link>
+        </>
+          )}</Link>
 
         <nav className="hidden lg:flex items-center gap-1" aria-label="Navigasi utama">
           {navLinks.map((link) => {

@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateAdminSession } from "@/lib/adminApiGuard";
 import { getServiceRoleOrThrow } from "@/lib/supabaseServiceRole";
-import { mapDbOrderToOrder, Order, OrderNote, OrderPhoto, sampleOrders } from "@/lib/orders";
+import { mapDbOrderToOrder, Order, OrderNote, OrderPhoto } from "@/lib/orders";
 import { OrderStatus } from "@/lib/data";
 import { buildOrderDoneMessage, sendWhatsApp, type NotifyResult } from "@/lib/whatsappNotify";
 
 interface OrderUpdatePayload {
   status?: OrderStatus;
-  price_estimate?: number;
-  price_final?: number;
   difficulty?: "mudah" | "sedang" | "sulit";
   estimated_done?: string;
   notes?: string;
@@ -36,8 +34,6 @@ interface DbOrderRow {
   quantity: number;
   difficulty: "mudah" | "sedang" | "sulit";
   notes?: string | null;
-  price_estimate?: number | null;
-  price_final?: number | null;
   status: OrderStatus;
   created_at: string;
   estimated_done?: string | null;
@@ -80,28 +76,16 @@ export async function PATCH(
       .eq("order_number", orderNumber)
       .maybeSingle();
 
-    let current: Order | undefined;
-    let isDevFallback = false;
-
     if (fetchErr || !currentRow) {
-      if (process.env.NODE_ENV !== "production") {
-        current = sampleOrders.find(
-          (o) => o.orderNumber.toLowerCase() === orderNumber.toLowerCase()
-        );
-        if (current) isDevFallback = true;
+      if (process.env.NODE_ENV === "development" && fetchErr) {
+        console.error("fetch order error:", fetchErr);
       }
-      if (!current) {
-        if (process.env.NODE_ENV === "development" && fetchErr) {
-          console.error("fetch order error:", fetchErr);
-        }
-        return NextResponse.json(
-          { success: false, error: "Order tidak ditemukan" },
-          { status: 404 }
-        );
-      }
-    } else {
-      current = mapDbOrderToOrder(currentRow as DbOrderRow);
+      return NextResponse.json(
+        { success: false, error: "Order tidak ditemukan" },
+        { status: 404 }
+      );
     }
+    const current: Order = mapDbOrderToOrder(currentRow as DbOrderRow);
 
     const nextTimeline = current.timeline ? [...current.timeline] : [];
     const noteText = typeof body.note === "string" ? body.note.trim().slice(0, 1000) : "";
@@ -145,9 +129,6 @@ export async function PATCH(
     const updatedOrder: Order = {
       ...current,
       status: body.status ?? current.status,
-      priceEstimate:
-        body.price_estimate !== undefined ? body.price_estimate : current.priceEstimate,
-      priceFinal: body.price_final !== undefined ? body.price_final : current.priceFinal,
       difficulty: body.difficulty ?? current.difficulty,
       estimatedDone:
         body.estimated_done !== undefined ? body.estimated_done : current.estimatedDone,
@@ -157,16 +138,8 @@ export async function PATCH(
       customerNotes: nextCustomerNotes,
     };
 
-    if (isDevFallback) {
-      const idx = sampleOrders.findIndex((o) => o.id === current!.id);
-      if (idx >= 0) sampleOrders[idx] = updatedOrder;
-      return NextResponse.json({ success: true, data: updatedOrder });
-    }
-
     const updatePayload: Record<string, unknown> = {};
     if (body.status !== undefined) updatePayload.status = body.status;
-    if (body.price_estimate !== undefined) updatePayload.price_estimate = body.price_estimate;
-    if (body.price_final !== undefined) updatePayload.price_final = body.price_final;
     if (body.difficulty !== undefined) updatePayload.difficulty = body.difficulty;
     if (body.estimated_done !== undefined) updatePayload.estimated_done = body.estimated_done;
     if (body.notes !== undefined) updatePayload.notes = body.notes;

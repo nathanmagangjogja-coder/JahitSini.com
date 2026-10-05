@@ -4,6 +4,7 @@ import { getBusinessSettingsRemote, buildWhatsAppLink } from "@/lib/settings";
 
 export default async function Footer() {
   const cfg = await getBusinessSettingsRemote();
+  const logoUrl = cfg.logoUrl || null;
   const waLink = buildWhatsAppLink(cfg, "Halo Jahitsini, saya ingin bertanya tentang layanan.");
   const instagramUrl = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "";
   const facebookUrl = process.env.NEXT_PUBLIC_FACEBOOK_URL || "";
@@ -16,7 +17,11 @@ export default async function Footer() {
       <div className="container-app py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">{logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="Jahitsini.com" className="h-10 w-auto max-w-[180px] object-contain" />
+          ) : (
+          <>
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-green to-emerald-400 shadow-soft">
                 <Scissors className="h-5 w-5 text-white" />
               </span>
@@ -25,7 +30,8 @@ export default async function Footer() {
                   Jahitsini<span className="text-brand-green">.com</span>
                 </span>
               </div>
-            </Link>
+            </>
+          )}</Link>
             <p className="text-sm text-slate-600 leading-relaxed max-w-xs">
               Tempat memperbaiki, mempermakan, dan menjahit ulang pakaian dengan
               mudah, cepat, dan hasil rapi profesional.

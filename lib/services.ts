@@ -16,7 +16,6 @@ function mapDbService(row: any): ServiceFull {
     id: row.id,
     name: row.name,
     description: row.description,
-    priceStart: row.price_start,
     duration: row.duration,
     category: row.category,
     icon: row.icon,
@@ -26,7 +25,6 @@ function mapDbService(row: any): ServiceFull {
     includes: cleanList(row.includes),
     steps: cleanSteps(row.steps),
     tips: cleanList(row.tips),
-    priceNotes: row.price_notes ?? "",
     faqs: cleanFaqs(row.faqs),
   });
 }
@@ -84,7 +82,6 @@ export interface ServiceInput extends Partial<ServiceDetails> {
   id?: string;
   name: string;
   description: string;
-  priceStart: number;
   duration: string;
   category: "permak" | "reparasi" | "resleting" | "aksesoris";
   icon: string;

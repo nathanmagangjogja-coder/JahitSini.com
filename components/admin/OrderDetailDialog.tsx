@@ -2,13 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Phone, Mail, MessageCircle, Edit } from "lucide-react";
+import { Phone, Mail, MessageCircle } from "lucide-react";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { OrderTimeline } from "@/components/ui/OrderTimeline";
-import { statusLabels, difficultyMultiplier, OrderStatus } from "@/lib/data";
-import { formatRupiah } from "@/lib/utils";
+import { statusLabels, OrderStatus } from "@/lib/data";
 import type { Order } from "@/lib/orders";
 
 const fmtDate = (v?: string, time = false) =>
@@ -58,12 +57,6 @@ export function OrderDetailDialog({
           <>
             <Button variant="outline" onClick={onClose}>
               Tutup
-            </Button>
-            <Button asChild>
-              <Link href={`/admin/orders?order=${encodeURIComponent(o.orderNumber)}&edit=1`}>
-                <Edit className="h-4 w-4" />
-                Ubah Status / Harga
-              </Link>
             </Button>
           </>
         )
@@ -116,11 +109,9 @@ export function OrderDetailDialog({
               <Field label="Layanan">{o.serviceName}</Field>
               <Field label="Jumlah">{o.quantity} pcs</Field>
               <Field label="Tingkat kesulitan">
-                {difficultyMultiplier[o.difficulty]?.label ?? o.difficulty}
+                {o.difficulty.charAt(0).toUpperCase() + o.difficulty.slice(1)}
               </Field>
               <Field label="Estimasi selesai">{fmtDate(o.estimatedDone)}</Field>
-              <Field label="Estimasi harga">{o.priceEstimate ? formatRupiah(o.priceEstimate) : "-"}</Field>
-              <Field label="Harga final">{o.priceFinal ? formatRupiah(o.priceFinal) : "Belum ditetapkan"}</Field>
             </div>
           </div>
 

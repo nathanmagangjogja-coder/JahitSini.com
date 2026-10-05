@@ -2,27 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {
-  Package,
-  Clock,
-  CheckCircle2,
-  Users,
-  ArrowRight,
-  Plus,
-  TrendingUp,
-  Filter,
-  Search,
-  Eye,
-  Edit,
-  Upload,
-  Loader2,
-  Inbox,
-  ClipboardCheck,
-  FileText,
-  Scissors,
-  ShieldCheck,
-  PackageCheck,
-} from "lucide-react";
+import { Users, ArrowRight, Plus, Filter, Search, Eye, Edit, Upload, Loader2, Inbox, ClipboardCheck, FileText, Scissors, ShieldCheck, PackageCheck } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -30,7 +10,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Input, Select } from "@/components/ui/Input";
 import { getAllOrdersRemote, Order } from "@/lib/orders";
 import { statusLabels, OrderStatus, statusTimeline } from "@/lib/data";
-import { formatRupiah } from "@/lib/utils";
 import { OrderDetailDialog } from "@/components/admin/OrderDetailDialog";
 import { OrderActionsMenu } from "@/components/admin/OrderActionsMenu";
 
@@ -60,10 +39,6 @@ export default function AdminDashboard() {
     return matchStatus && matchSearch && matchActive;
   });
 
-  const revenue = orders.reduce((s, o) => s + (o.priceFinal || o.priceEstimate || 0), 0);
-  const revenueDone = orders
-    .filter((o) => o.status === "done")
-    .reduce((s, o) => s + (o.priceFinal || o.priceEstimate || 0), 0);
   const byStatus = (st: OrderStatus) => orders.filter((o) => o.status === st).length;
 
   const statCards = [
@@ -174,33 +149,6 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="mb-6">
-        <Card className="bg-gradient-to-br from-amber-50 via-white to-orange-50 border-orange-200">
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="h-12 w-12 shrink-0 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-soft">
-              <TrendingUp className="h-6 w-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold text-orange-700 uppercase tracking-wider">
-                Pendapatan dari Pesanan Selesai
-              </div>
-              <div className="text-3xl font-extrabold text-brand-text tracking-tight mt-1">
-                {formatRupiah(revenueDone)}
-              </div>
-              <div className="text-xs text-slate-500 mt-0.5">
-                Estimasi total seluruh pesanan: {formatRupiah(revenue)}
-              </div>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/admin/orders?status=done">
-                Lihat Detail
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="grid lg:grid-cols-3 gap-6 mb-6">
         <Card className="lg:col-span-2">
           <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -258,7 +206,6 @@ export default function AdminDashboard() {
                   <th className="py-3 pr-4 font-semibold">Pelanggan</th>
                   <th className="py-3 pr-4 font-semibold">Layanan</th>
                   <th className="py-3 pr-4 font-semibold">Status</th>
-                  <th className="py-3 pr-4 font-semibold">Biaya</th>
                   <th className="py-3 text-right font-semibold">Aksi</th>
                 </tr>
               </thead>
@@ -305,11 +252,6 @@ export default function AdminDashboard() {
                       <Badge className={`${statusLabels[o.status as OrderStatus].color} border`}>
                         {statusLabels[o.status as OrderStatus].label}
                       </Badge>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <div className="font-semibold text-brand-text">
-                        {formatRupiah(o.priceFinal || o.priceEstimate || 0)}
-                      </div>
                     </td>
                     <td className="py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
@@ -399,12 +341,6 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="lg" asChild>
-              <Link href="/admin/orders?status=estimation">
-                <Edit className="h-4 w-4" />
-                Tambah Estimasi
-              </Link>
-            </Button>
             <Button size="lg" asChild>
               <Link href="/admin/orders">
                 <Plus className="h-4 w-4" />

@@ -12,7 +12,6 @@ export interface Service {
   id: string;
   name: string;
   description: string;
-  priceStart: number;
   duration: string;
   category: "permak" | "reparasi" | "resleting" | "aksesoris";
   icon: string;
@@ -52,7 +51,6 @@ export const services: Service[] = [
     id: "permak-potong-celana",
     name: "Potong Celana",
     description: "Potong panjang celana sesuai ukuran kaki dengan hasil jahitan rapi.",
-    priceStart: 25000,
     duration: "1-2 hari",
     category: "permak",
     icon: "scissors",
@@ -61,7 +59,6 @@ export const services: Service[] = [
     id: "permak-kecilkan-baju",
     name: "Kecilkan Baju",
     description: "Kecilkan ukuran baju baik di bagian badan, lengan, maupun bagian lain.",
-    priceStart: 45000,
     duration: "2-3 hari",
     category: "permak",
     icon: "shirt",
@@ -70,7 +67,6 @@ export const services: Service[] = [
     id: "permak-besarkan-pakaian",
     name: "Besarkan Pakaian",
     description: "Besarkan ukuran pakaian dengan menyisipkan kain tambahan yang serasi.",
-    priceStart: 60000,
     duration: "2-4 hari",
     category: "permak",
     icon: "maximize",
@@ -79,7 +75,6 @@ export const services: Service[] = [
     id: "permak-jas",
     name: "Permak Jas",
     description: "Permak detail jas: lengan, badan, celana jas agar presisi dan rapi.",
-    priceStart: 85000,
     duration: "3-5 hari",
     category: "permak",
     icon: "briefcase",
@@ -88,7 +83,6 @@ export const services: Service[] = [
     id: "permak-jaket",
     name: "Permak Jaket",
     description: "Ubah ukuran jaket sesuai bentuk badan, tanpa merusak desain asli.",
-    priceStart: 75000,
     duration: "3-4 hari",
     category: "permak",
     icon: "shirt",
@@ -97,7 +91,6 @@ export const services: Service[] = [
     id: "reparasi-jahit-sobekan",
     name: "Jahit Sobekan",
     description: "Jahit sobekan pada kain dengan jahitan tersembunyi dan rapi.",
-    priceStart: 20000,
     duration: "1-2 hari",
     category: "reparasi",
     icon: "needle",
@@ -106,7 +99,6 @@ export const services: Service[] = [
     id: "reparasi-tambal-pakaian",
     name: "Tambal Pakaian",
     description: "Tambal bagian pakaian yang bolong dengan kain patch yang cocok.",
-    priceStart: 30000,
     duration: "1-2 hari",
     category: "reparasi",
     icon: "patch-plus",
@@ -115,7 +107,6 @@ export const services: Service[] = [
     id: "reparasi-perbaikan-jahitan",
     name: "Perbaikan Jahitan",
     description: "Perbaiki jahitan yang lepas atau renggang agar kembali kuat.",
-    priceStart: 20000,
     duration: "1 hari",
     category: "reparasi",
     icon: "suture",
@@ -124,7 +115,6 @@ export const services: Service[] = [
     id: "resleting-celana",
     name: "Ganti Resleting Celana",
     description: "Ganti resleting celana dengan ukuran dan kualitas sesuai aslinya.",
-    priceStart: 35000,
     duration: "1-2 hari",
     category: "resleting",
     icon: "zap",
@@ -133,7 +123,6 @@ export const services: Service[] = [
     id: "resleting-jaket",
     name: "Ganti Resleting Jaket",
     description: "Ganti resleting jaket dengan presisi tinggi, cocok untuk jaket tebal.",
-    priceStart: 50000,
     duration: "2-3 hari",
     category: "resleting",
     icon: "zap",
@@ -142,7 +131,6 @@ export const services: Service[] = [
     id: "resleting-tas",
     name: "Ganti Resleting Tas",
     description: "Ganti resleting tas ransel, koper, atau tas jinjing dengan kuat.",
-    priceStart: 45000,
     duration: "1-3 hari",
     category: "resleting",
     icon: "zap",
@@ -151,7 +139,6 @@ export const services: Service[] = [
     id: "aksesoris-pasang-kancing",
     name: "Pasang Kancing",
     description: "Pasang kancing baru dengan model dan ukuran yang sesuai.",
-    priceStart: 15000,
     duration: "1 hari",
     category: "aksesoris",
     icon: "circle-dot",
@@ -160,18 +147,11 @@ export const services: Service[] = [
     id: "aksesoris-ganti-kancing",
     name: "Ganti Kancing",
     description: "Lepas kancing lama dan ganti dengan kancing baru pilihanmu.",
-    priceStart: 18000,
     duration: "1 hari",
     category: "aksesoris",
     icon: "refresh-cw",
   },
 ];
-
-export const difficultyMultiplier: Record<string, { label: string; multiplier: number }> = {
-  mudah: { label: "Mudah", multiplier: 1 },
-  sedang: { label: "Sedang", multiplier: 1.4 },
-  sulit: { label: "Sulit", multiplier: 1.8 },
-};
 
 export const statusLabels: Record<OrderStatus, { label: string; color: string }> = {
   received: { label: "Pesanan diterima", color: "bg-slate-100 text-slate-700 border-slate-200" },
@@ -219,28 +199,18 @@ export const faqItems: FAQItem[] = [
     category: "reparasi",
   },
   {
-    question: "Berapa harga ganti resleting celana?",
-    answer: "Ganti resleting celana mulai dari Rp 35.000. Harga bisa berbeda tergantung panjang dan merk resleting yang digunakan.",
-    category: "resleting",
-  },
-  {
     question: "Apakah jahitan jas dijamin presisi?",
     answer: "Tentu. Penjahit kami berpengalaman lebih dari 5 tahun dalam menangani jas formal, jas almamater, dan jas pernikahan. Hasil presisi dan nyaman dipakai.",
     category: "jas",
   },
   {
     question: "Apakah tersedia layanan pengiriman?",
-    answer: "Saat ini kami menerima drop-off dan pick-up di workshop. Untuk pengiriman via kurir (GoSend, GrabExpress, JNE, dll.) bisa diatur sesuai kesepakatan. Biaya pengiriman ditanggung pelanggan.",
+    answer: "Saat ini kami menerima drop-off dan pick-up di workshop. Untuk pengiriman via kurir (GoSend, GrabExpress, JNE, dll.) bisa diatur sesuai kesepakatan. Ongkir ditanggung pelanggan.",
     category: "pengiriman",
   },
   {
-    question: "Bagaimana cara menghitung estimasi harga?",
-    answer: "Anda bisa menggunakan kalkulator estimasi biaya di halaman Layanan. Masukkan jenis layanan, tingkat kesulitan, dan jumlah pakaian. Untuk harga pasti, tim kami akan memeriksa pakaian secara langsung setelah diterima.",
-    category: "harga",
-  },
-  {
     question: "Apakah permak bisa membatalkan perubahan jika tidak sesuai?",
-    answer: "Kami akan mengonfirmasi detail permak sebelum dikerjakan. Jika ada ketidaksesuaian dari hasil kerja kami, kami akan mereparasi ulang tanpa biaya tambahan.",
+    answer: "Kami akan mengonfirmasi detail permak sebelum dikerjakan. Jika ada ketidaksesuaian dari hasil kerja kami, kami akan mereparasi ulang gratis.",
     category: "permak",
   },
   {

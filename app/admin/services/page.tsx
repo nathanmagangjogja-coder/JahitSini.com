@@ -10,14 +10,12 @@ import { Input, Select, Textarea } from "@/components/ui/Input";
 import { categories } from "@/lib/data";
 import { getServicesRemote, createService, updateService, deleteService, ServiceInput, ServiceFull } from "@/lib/services";
 import { listToText, textToList, stepsToText, textToSteps, faqsToText, textToFaqs } from "@/lib/serviceDetails";
-import { formatRupiah } from "@/lib/utils";
 import { ServiceIcon } from "@/components/ui/ServiceIcon";
 import { useToast } from "@/components/ui/Toast";
 
 interface FormState {
   name: string;
   description: string;
-  priceStart: number;
   duration: string;
   category: ServiceInput["category"];
   icon: string;
@@ -25,14 +23,12 @@ interface FormState {
   includesText: string;
   stepsText: string;
   tipsText: string;
-  priceNotes: string;
   faqsText: string;
 }
 
 const emptyForm: FormState = {
   name: "",
   description: "",
-  priceStart: 0,
   duration: "",
   category: "permak",
   icon: "scissors",
@@ -40,7 +36,6 @@ const emptyForm: FormState = {
   includesText: "",
   stepsText: "",
   tipsText: "",
-  priceNotes: "",
   faqsText: "",
 };
 
@@ -102,7 +97,6 @@ export default function AdminServicesPage() {
     setForm({
       name: s.name,
       description: s.description,
-      priceStart: s.priceStart,
       duration: s.duration,
       category: s.category,
       icon: s.icon,
@@ -110,7 +104,6 @@ export default function AdminServicesPage() {
       includesText: listToText(s.includes),
       stepsText: stepsToText(s.steps),
       tipsText: listToText(s.tips),
-      priceNotes: s.priceNotes,
       faqsText: faqsToText(s.faqs),
     });
     setModalOpen(true);
@@ -118,14 +111,13 @@ export default function AdminServicesPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.description.trim() || !form.duration.trim() || form.priceStart <= 0) {
-      toast({ variant: "error", title: "Lengkapi semua field", description: "Nama, deskripsi singkat, harga (lebih dari 0), dan durasi wajib diisi." });
+    if (!form.name.trim() || !form.description.trim() || !form.duration.trim()) {
+      toast({ variant: "error", title: "Lengkapi semua field", description: "Nama, deskripsi singkat, dan durasi wajib diisi." });
       return;
     }
     const input: ServiceInput = {
       name: form.name.trim(),
       description: form.description.trim(),
-      priceStart: form.priceStart,
       duration: form.duration.trim(),
       category: form.category,
       icon: form.icon,
@@ -133,7 +125,6 @@ export default function AdminServicesPage() {
       includes: textToList(form.includesText),
       steps: textToSteps(form.stepsText),
       tips: textToList(form.tipsText),
-      priceNotes: form.priceNotes.trim(),
       faqs: textToFaqs(form.faqsText),
     };
     setSaving(true);
@@ -245,7 +236,6 @@ export default function AdminServicesPage() {
               <tr className="text-left text-xs text-slate-500 uppercase tracking-wider border-b border-brand-border">
                 <th className="py-3 pr-4 font-semibold">Layanan</th>
                 <th className="py-3 pr-4 font-semibold">Kategori</th>
-                <th className="py-3 pr-4 font-semibold">Harga Mulai</th>
                 <th className="py-3 pr-4 font-semibold">Durasi</th>
                 <th className="py-3 pr-4 font-semibold">Status</th>
                 <th className="py-3 text-right font-semibold">Aksi</th>
@@ -254,7 +244,7 @@ export default function AdminServicesPage() {
             <tbody className="divide-y divide-brand-border/60">
               {filteredServices.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-slate-400">
+                  <td colSpan={5} className="py-10 text-center text-slate-400">
                     Tidak ada layanan yang cocok.
                   </td>
                 </tr>
@@ -274,9 +264,6 @@ export default function AdminServicesPage() {
                     </td>
                     <td className="py-3 pr-4">
                       <Badge variant="outline" className="uppercase">{categoryMap[s.category] || s.category}</Badge>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <div className="font-bold text-brand-text">{formatRupiah(s.priceStart)}</div>
                     </td>
                     <td className="py-3 pr-4">
                       <div className="text-slate-600">{s.duration}</div>
@@ -346,15 +333,6 @@ export default function AdminServicesPage() {
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-brand-text">Harga Mulai (Rp)</label>
-                    <Input
-                      type="number"
-                      value={form.priceStart || ""}
-                      onChange={(e) => setForm((f) => ({ ...f, priceStart: Number(e.target.value) }))}
-                      placeholder="25000"
-                    />
-                  </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-brand-text">Durasi</label>
                     <Input
@@ -426,15 +404,6 @@ export default function AdminServicesPage() {
                     onChange={(e) => setForm((f) => ({ ...f, tipsText: e.target.value }))}
                     rows={4}
                     placeholder={"Satu tips per baris"}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-brand-text">Penjelasan Harga</label>
-                  <Textarea
-                    value={form.priceNotes}
-                    onChange={(e) => setForm((f) => ({ ...f, priceNotes: e.target.value }))}
-                    rows={3}
-                    placeholder="Apa yang memengaruhi harga akhir layanan ini."
                   />
                 </div>
                 <div className="space-y-1.5">

@@ -15,6 +15,9 @@ export interface BusinessSettings {
   notifyDailyReport: boolean;
   /** Sisi terpanjang maksimum (px) untuk foto yang diunggah (pakaian & foto website). */
   photoMaxDimension: number;
+  /** URL logo header & favicon (diunggah admin ke bucket brand-assets). Kosong = pakai bawaan. */
+  logoUrl?: string;
+  faviconUrl?: string;
 }
 
 const LOCAL_SETTINGS_KEY = "jahitsini_business_settings";
@@ -104,6 +107,8 @@ export async function getBusinessSettingsRemote(): Promise<BusinessSettings> {
     notifyDailyReport: data.notify_daily_report ?? local.notifyDailyReport ?? false,
     photoMaxDimension:
       data.photo_max_dimension ?? local.photoMaxDimension ?? fallback.photoMaxDimension,
+    logoUrl: data.logo_url || undefined,
+    faviconUrl: data.favicon_url || undefined,
   };
 }
 

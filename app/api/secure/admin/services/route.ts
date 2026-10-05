@@ -26,7 +26,6 @@ function toPayload(body: any): Record<string, unknown> {
   if (name !== undefined) p.name = name;
   const description = text(body.description, 500);
   if (description !== undefined) p.description = description;
-  if (body.priceStart !== undefined) p.price_start = Math.max(0, Math.round(Number(body.priceStart) || 0));
   const duration = text(body.duration, 60);
   if (duration !== undefined) p.duration = duration;
   if (typeof body.category === "string" && CATEGORIES.includes(body.category)) p.category = body.category;
@@ -35,8 +34,6 @@ function toPayload(body: any): Record<string, unknown> {
 
   const longDescription = text(body.longDescription, 6000);
   if (longDescription !== undefined) p.long_description = longDescription;
-  const priceNotes = text(body.priceNotes, 2000);
-  if (priceNotes !== undefined) p.price_notes = priceNotes;
   if (body.includes !== undefined) p.includes = cleanList(body.includes);
   if (body.tips !== undefined) p.tips = cleanList(body.tips);
   if (body.steps !== undefined) p.steps = cleanSteps(body.steps);
@@ -50,7 +47,7 @@ function dbError(error: { message: string }) {
   return fail(
     500,
     missingColumn
-      ? "Kolom detail layanan belum ada di database. Jalankan supabase/migrations/0011_service_details.sql dulu."
+      ? "Kolom detail layanan belum ada di database. Jalankan supabase/migrations/0012_service_details.sql dulu."
       : process.env.NODE_ENV === "development"
       ? error.message
       : "Gagal menyimpan ke database."
@@ -68,8 +65,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") return fail(400, "Invalid request body");
     const payload = toPayload(body);
-    if (!payload.name || !payload.description || !payload.duration || !payload.price_start || !payload.category) {
-      return fail(400, "Nama, deskripsi, harga, durasi, dan kategori wajib diisi.");
+    if (!payload.name || !payload.description || !payload.duration || !payload.category) {
+      return fail(400, "Nama, deskripsi, durasi, dan kategori wajib diisi.");
     }
 
     const sb = await getServiceRoleOrThrow();

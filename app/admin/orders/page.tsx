@@ -4,16 +4,16 @@ import * as React from "react";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  Search, RotateCw, Eye, Edit, Check, Loader2, MessageCircle, Send, ArrowLeft, Trash2,
+  Search, RotateCw, Eye, Edit, Check, Loader2, MessageCircle, ArrowLeft, Trash2,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Input, Select } from "@/components/ui/Input";
-import { getAllOrdersRemote, updateOrderRemote, deleteOrderRemote, sendAdminReply, subscribeToOrder, Order, type OrderNotifyResult } from "@/lib/orders";
-import { statusLabels, OrderStatus, statusTimeline, orderStatusOptions } from "@/lib/data";
-import { formatRupiah } from "@/lib/utils";
+import { getAllOrdersRemote, updateOrderRemote, deleteOrderRemote, Order, type OrderNotifyResult } from "@/lib/orders";
+import { statusLabels, OrderStatus, orderStatusOptions } from "@/lib/data";
+import { normalizeIndonesianPhone } from "@/lib/whatsappNotify";
 import { OrderTimeline } from "@/components/ui/OrderTimeline";
 import { useToast } from "@/components/ui/Toast";
 import { OrderDetailDialog } from "@/components/admin/OrderDetailDialog";
@@ -29,12 +29,9 @@ function AdminOrdersPageInner() {
   const [search, setSearch] = React.useState("");
   const [editStatus, setEditStatus] = React.useState(false);
   const [newStatus, setNewStatus] = React.useState<OrderStatus | "">("");
-  const [newPrice, setNewPrice] = React.useState("");
   const [newNote, setNewNote] = React.useState("");
   const [applying, setApplying] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
-  const [chatInput, setChatInput] = React.useState("");
-  const [sendingChat, setSendingChat] = React.useState(false);
   const [detailOrder, setDetailOrder] = React.useState<Order | null>(null);
   const paramsApplied = React.useRef(false);
   const [mobileView, setMobileView] = React.useState<"list" | "detail">("list");
@@ -77,22 +74,13 @@ function AdminOrdersPageInner() {
     }
   }, [loading, orders, searchParams]);
 
-  // Chat pelanggan masuk secara live tanpa perlu refresh manual.
-  React.useEffect(() => {
-    if (!selectedId) return;
-    const unsubscribe = subscribeToOrder(selectedId, (updated) => {
-      setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
-    });
-    return unsubscribe;
-  }, [selectedId]);
-
-  // Pesan pelanggan baru muncul otomatis (polling 5 detik, hanya saat tab terlihat).
+  // Data pesanan disegarkan otomatis (polling 5 detik, hanya saat tab terlihat).
   React.useEffect(() => {
     const id = setInterval(() => {
-      if (document.visibilityState === "visible" && !applying && !sendingChat) loadOrders();
+      if (document.visibilityState === "visible" && !applying) loadOrders();
     }, 5000);
     return () => clearInterval(id);
-  }, [loadOrders, applying, sendingChat]);
+  }, [loadOrders, applying]);
 
   const filtered = orders.filter((o) => {
     const matchStatus = statusFilter === "all" || o.status === statusFilter;
@@ -105,19 +93,6 @@ function AdminOrdersPageInner() {
 
   const selected = orders.find((o) => o.id === selectedId) || filtered[0];
 
-  const handleSendChat = async () => {
-    if (!chatInput.trim() || !selected) return;
-    setSendingChat(true);
-    const ok = await sendAdminReply(selected.orderNumber, chatInput.trim());
-    setSendingChat(false);
-    if (ok) {
-      setChatInput("");
-      await loadOrders();
-    } else {
-      toast({ variant: "error", title: "Gagal mengirim pesan" });
-    }
-  };
-
   const handleApply = async () => {
     if (!selected) return;
     setApplying(true);
@@ -126,7 +101,6 @@ function AdminOrdersPageInner() {
       selected.orderNumber,
       {
         status: (newStatus as OrderStatus) || undefined,
-        priceFinal: newPrice ? Number(newPrice) : undefined,
         note: newNote || undefined,
       },
       (r) => {
@@ -162,7 +136,6 @@ function AdminOrdersPageInner() {
 
     setEditStatus(false);
     setNewStatus("");
-    setNewPrice("");
     setNewNote("");
   };
 
@@ -190,7 +163,7 @@ function AdminOrdersPageInner() {
     <DashboardLayout
       type="admin"
       title="Kelola Pesanan"
-      subtitle="Perbarui status, estimasi, dan detail semua pesanan"
+      subtitle="Perbarui status dan detail semua pesanan"
     >
       <Card className="mb-6">
         <CardContent className="p-4 sm:p-5 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
@@ -289,9 +262,6 @@ function AdminOrdersPageInner() {
                       <div className="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap mt-0.5">
                         <span>{o.customerName}</span>
                         <span>· {new Date(o.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}</span>
-                        <span className="font-semibold text-brand-green ml-auto">
-                          {formatRupiah(o.priceFinal || o.priceEstimate || 0)}
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -336,12 +306,13 @@ function AdminOrdersPageInner() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="!h-8 !w-8 !p-0"
+                  className="!h-8 !px-2 text-brand-green text-xs font-semibold"
                   aria-label="Ubah status"
                   title="Ubah status"
                   onClick={() => setEditStatus(true)}
                 >
                   <Edit className="h-4 w-4" />
+                  Ubah
                 </Button>
                 <OrderActionsMenu order={selected} onView={() => setDetailOrder(selected)} />
                 {selected.status === "cancelled" && (
@@ -382,15 +353,6 @@ function AdminOrdersPageInner() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-semibold text-slate-500">STATUS SAAT INI</span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="!h-7 !px-2 text-brand-green text-[11px]"
-                        onClick={() => setEditStatus(true)}
-                      >
-                        <Edit className="h-3 w-3" />
-                        Ubah
-                      </Button>
                     </div>
                     <Badge className={`${statusLabels[selected.status as OrderStatus].color} border text-xs !px-3 !py-1.5`}>
                       {statusLabels[selected.status as OrderStatus].label}
@@ -398,10 +360,8 @@ function AdminOrdersPageInner() {
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div className="rounded-xl bg-brand-bg/70 p-3 space-y-0.5">
-                      <div className="text-slate-500">Harga Final</div>
-                      <div className="font-bold text-brand-text text-sm">
-                        {formatRupiah(selected.priceFinal || selected.priceEstimate || 0)}
-                      </div>
+                      <div className="text-slate-500">Jumlah</div>
+                      <div className="font-bold text-brand-text text-sm">{selected.quantity} pcs</div>
                     </div>
                     <div className="rounded-xl bg-brand-bg/70 p-3 space-y-0.5">
                       <div className="text-slate-500">Pelanggan</div>
@@ -438,20 +398,11 @@ function AdminOrdersPageInner() {
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Harga Final (Rp)</label>
-                    <Input
-                      value={newPrice || (selected.priceFinal || selected.priceEstimate || "")}
-                      onChange={(e) => setNewPrice(e.target.value)}
-                      placeholder="contoh: 100000"
-                      className="mt-1.5"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Balasan / Catatan Untuk Pelanggan (masuk ke chat)</label>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">Catatan Internal (opsional)</label>
                     <Input
                       value={newNote}
                       onChange={(e) => setNewNote(e.target.value)}
-                      placeholder="Tulis balasan atau catatan untuk pelanggan..."
+                      placeholder="Catatan singkat untuk riwayat status pesanan ini..."
                       className="mt-1.5"
                     />
                   </div>
@@ -475,72 +426,33 @@ function AdminOrdersPageInner() {
             <CardHeader className="pb-3 border-b border-brand-border/60">
               <CardTitle className="text-base flex items-center gap-2">
                 <MessageCircle className="h-4 w-4 text-brand-green" />
-                Chat dengan {selected.customerName}
+                Komunikasi dengan {selected.customerName}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-3">
-              <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
-                {selected.customerNotes.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-6">
-                    Belum ada pesan pada pesanan ini.
-                  </p>
+            <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="text-sm text-slate-600">
+                  Semua komunikasi dengan pelanggan dilakukan lewat WhatsApp, bukan chat dalam
+                  aplikasi.
+                </p>
+                <p className="text-xs text-slate-400 mt-1">{selected.customerPhone}</p>
+              </div>
+              {(() => {
+                const phone = normalizeIndonesianPhone(selected.customerPhone);
+                const text = encodeURIComponent(
+                  `Halo ${selected.customerName}, soal pesanan ${selected.orderNumber} (${selected.serviceName})...`
+                );
+                return phone ? (
+                  <Button asChild size="lg" className="shrink-0">
+                    <a href={`https://wa.me/${phone}?text=${text}`} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="h-4 w-4" />
+                      Chat via WhatsApp
+                    </a>
+                  </Button>
                 ) : (
-                  selected.customerNotes.map((n) => (
-                    <div
-                      key={n.id}
-                      className={`flex ${n.role === "admin" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-xs ${
-                          n.role === "admin"
-                            ? "bg-brand-green text-white rounded-br-sm"
-                            : "bg-brand-bg text-brand-text rounded-bl-sm"
-                        }`}
-                      >
-                        <div className="font-semibold mb-0.5 opacity-80">{n.author}</div>
-                        <div className="leading-relaxed">{n.message}</div>
-                        <div
-                          className={`text-[10px] mt-1 ${
-                            n.role === "admin" ? "text-white/70" : "text-slate-400"
-                          }`}
-                        >
-                          {new Date(n.timestamp).toLocaleString("id-ID", {
-                            day: "numeric",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              <div className="flex gap-2 pt-1 border-t border-brand-border/60">
-                <Input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendChat();
-                    }
-                  }}
-                  placeholder="Tulis balasan untuk pelanggan..."
-                  className="mt-2"
-                />
-                <Button
-                  className="mt-2 shrink-0"
-                  onClick={handleSendChat}
-                  disabled={sendingChat || !chatInput.trim()}
-                >
-                  {sendingChat ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
+                  <span className="text-xs text-red-500">Nomor WhatsApp tidak valid</span>
+                );
+              })()}
             </CardContent>
           </Card>
         )}

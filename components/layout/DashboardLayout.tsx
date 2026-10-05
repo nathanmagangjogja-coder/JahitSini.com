@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { getAllOrdersRemote } from "@/lib/orders";
+import { getBusinessSettingsRemote } from "@/lib/settings";
 
 export interface NavItem {
   href: string;
@@ -43,6 +44,11 @@ export function DashboardLayout({ title, subtitle, children, width = "wide" }: S
   const items = adminNavItems;
   const homeHref = "/admin";
   const [activeOrderCount, setActiveOrderCount] = React.useState<number | null>(null);
+  const [logoUrl, setLogoUrl] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    getBusinessSettingsRemote().then((cfg) => setLogoUrl(cfg.logoUrl || null));
+  }, []);
 
   React.useEffect(() => {
     async function loadCount() {
@@ -67,7 +73,11 @@ export function DashboardLayout({ title, subtitle, children, width = "wide" }: S
     <div className="min-h-screen bg-brand-bg/50">
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-brand-border lg:bg-white fixed inset-y-0 left-0 z-30">
         <div className="p-5 border-b border-brand-border">
-          <Link href={homeHref} className="flex items-center gap-2.5">
+          <Link href={homeHref} className="flex items-center gap-2.5">{logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="Jahitsini.com" className="h-9 w-auto max-w-[160px] object-contain" />
+          ) : (
+          <>
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-green to-emerald-400 shadow-soft">
               <Scissors className="h-4 w-4 text-white" />
             </span>
@@ -79,7 +89,8 @@ export function DashboardLayout({ title, subtitle, children, width = "wide" }: S
                 Dashboard Admin
               </span>
             </div>
-          </Link>
+          </>
+          )}</Link>
         </div>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           <div className="px-3 pt-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
@@ -136,14 +147,19 @@ export function DashboardLayout({ title, subtitle, children, width = "wide" }: S
 
       <div className="min-h-screen min-w-0 flex flex-col lg:pl-64">
         <header className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-brand-border px-4 h-14 flex items-center justify-between">
-          <Link href={homeHref} className="flex items-center gap-2">
+          <Link href={homeHref} className="flex items-center gap-2">{logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="Jahitsini.com" className="h-9 w-auto max-w-[160px] object-contain" />
+          ) : (
+          <>
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-green to-emerald-400">
               <Scissors className="h-4 w-4 text-white" />
             </span>
             <span className="font-bold text-brand-text text-sm">
               Jahitsini<span className="text-brand-green">.com</span>
             </span>
-          </Link>
+          </>
+          )}</Link>
           <Button variant="outline" size="sm" onClick={handleLogout}>
             <LogOut className="h-3.5 w-3.5" />
             Keluar

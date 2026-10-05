@@ -4,26 +4,22 @@ import * as React from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  ArrowRight,
   CheckCircle2,
   Clock,
   Lightbulb,
   ShieldCheck,
   SearchX,
-  Tag,
-  Wallet,
 } from "lucide-react";
 import { categories, services as staticServices } from "@/lib/data";
 import { getServiceByIdRemote, getServicesRemote, type ServiceFull } from "@/lib/services";
 import { withDetails } from "@/lib/serviceDetails";
-import { formatRupiah } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Accordion, AccordionItem } from "@/components/ui/Accordion";
 import { ServiceIcon } from "@/components/ui/ServiceIcon";
-import { CostCalculator } from "@/components/sections/CostCalculator";
+import { ServiceWhatsAppButton } from "@/components/shared/ServiceWhatsAppButton";
 
 interface Props {
   serviceId: string;
@@ -71,7 +67,6 @@ export function ServiceDetailClient({ serviceId, initialService }: Props) {
     };
   }, []);
 
-  const calculatorServices = React.useMemo(() => (service ? [service] : []), [service]);
 
   if (loading) {
     return (
@@ -134,17 +129,7 @@ export function ServiceDetailClient({ serviceId, initialService }: Props) {
             </div>
           </div>
 
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <Tag className="h-3.5 w-3.5" /> Mulai dari
-                </div>
-                <div className="mt-1 text-xl font-extrabold text-brand-text">
-                  {formatRupiah(service.priceStart)}
-                </div>
-              </CardContent>
-            </Card>
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -235,18 +220,6 @@ export function ServiceDetailClient({ serviceId, initialService }: Props) {
               </div>
             )}
 
-            {service.priceNotes && (
-              <div className="rounded-2xl border border-brand-green/20 bg-gradient-to-br from-brand-bg via-white to-green-50 p-6">
-                <SectionTitle icon={<Wallet className="h-6 w-6 text-brand-green" />}>
-                  Tentang harga
-                </SectionTitle>
-                <p className="mt-3 text-sm text-slate-600 leading-relaxed">{service.priceNotes}</p>
-                <p className="mt-3 text-sm font-semibold text-brand-text">
-                  Mulai dari {formatRupiah(service.priceStart)} · estimasi {service.duration}
-                </p>
-              </div>
-            )}
-
             {service.faqs.length > 0 && (
               <div className="space-y-4">
                 <SectionTitle>Pertanyaan umum</SectionTitle>
@@ -265,27 +238,49 @@ export function ServiceDetailClient({ serviceId, initialService }: Props) {
                 <SectionTitle>Layanan terkait</SectionTitle>
                 <div className="grid sm:grid-cols-3 gap-4">
                   {others.map((s) => (
-                    <Link key={s.id} href={`/layanan/${s.id}`} className="group">
-                      <Card className="h-full transition-all group-hover:shadow-card group-hover:border-brand-green/30">
-                        <CardContent className="p-4 space-y-2">
+                    <Card key={s.id} className="h-full">
+                      <CardContent className="p-4 space-y-3">
+                        <div>
                           <div className="font-bold text-brand-text">{s.name}</div>
-                          <div className="text-sm text-slate-500">
-                            Mulai dari {formatRupiah(s.priceStart)}
-                          </div>
-                          <div className="flex items-center gap-1 text-xs font-semibold text-brand-green">
-                            Lihat detail <ArrowRight className="h-3.5 w-3.5" />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
+                          <div className="text-sm text-slate-500">Estimasi {s.duration}</div>
+                        </div>
+                        <ServiceWhatsAppButton
+                          service={{ name: s.name, categoryLabel: category?.name }}
+                          size="sm"
+                          variant="secondary"
+                          className="w-full"
+                        />
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               </div>
             )}
           </div>
 
-          <div className="lg:sticky lg:top-24" id="kalkulator">
-            <CostCalculator services={calculatorServices} initialServiceId={service.id} lockService />
+          <div className="lg:sticky lg:top-24">
+            <Card className="overflow-hidden border-brand-green/20">
+              <CardContent className="p-6 sm:p-7 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-green to-emerald-400 shadow-soft text-white shrink-0">
+                    <ServiceIcon name={service.icon} className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-brand-text text-lg">{service.name}</h3>
+                    <p className="text-sm text-slate-500 mt-0.5">Estimasi {service.duration}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Chat langsung dengan admin di WhatsApp untuk konfirmasi detail dan jadwal
+                  pengerjaan layanan ini.
+                </p>
+                <ServiceWhatsAppButton
+                  service={{ name: service.name, categoryLabel: category?.name }}
+                  size="lg"
+                  className="w-full"
+                />
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

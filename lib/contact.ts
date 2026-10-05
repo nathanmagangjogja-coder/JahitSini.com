@@ -50,16 +50,6 @@ function saveLocalMessage(input: ContactMessageInput): boolean {
   return true;
 }
 
-function mergeMessages(...groups: ContactMessage[][]): ContactMessage[] {
-  const byId = new Map<string, ContactMessage>();
-  groups.flat().forEach((message) => {
-    if (!byId.has(message.id)) byId.set(message.id, message);
-  });
-  return Array.from(byId.values()).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-}
-
 /** Kirim pesan kontak ke Supabase, atau simpan lokal kalau database belum siap. */
 export async function sendContactMessage(input: ContactMessageInput): Promise<boolean> {
   if (!supabase) return saveLocalMessage(input);
@@ -87,42 +77,10 @@ export function mapDbMessage(row: any): ContactMessage {
   };
 }
 
-/** Semua pesan kontak untuk panel admin. */
-export async function getAllContactMessages(): Promise<ContactMessage[]> {
-  const localMessages = readLocalMessages();
-  if (!supabase) return localMessages;
-  const { data, error } = await supabase
-    .from("contact_messages")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error || !data) return localMessages;
-  return mergeMessages(localMessages, data.map(mapDbMessage));
-}
-
-export async function markContactMessageRead(messageId: string): Promise<boolean> {
-  const updateLocal = () => {
-    const messages = readLocalMessages();
-    const idx = messages.findIndex((message) => message.id === messageId);
-    if (idx < 0) return false;
-    messages[idx] = { ...messages[idx], isRead: true };
-    writeLocalMessages(messages);
-    return true;
-  };
-
-  if (!supabase || messageId.startsWith("local_")) return updateLocal();
-  const { error } = await supabase
-    .from("contact_messages")
-    .update({ is_read: true })
-    .eq("id", messageId);
-  if (error) return updateLocal();
-  return true;
-}
-
 /**
- * Versi ADMIN dari dua fungsi di atas: lewat /api/secure/admin/messages,
- * yang berjalan di server dengan service role + verifikasi sesi admin.
- * Dipakai khusus di halaman /admin/messages, karena browser (anon key)
- * tidak diizinkan RLS membaca tabel contact_messages secara langsung.
+ * Fungsi ADMIN: lewat /api/secure/admin/messages, yang berjalan di server
+ * dengan service role + verifikasi sesi admin. Dipakai di halaman /admin/messages,
+ * karena browser (anon key) tidak diizinkan RLS membaca tabel contact_messages.
  */
 export async function getAllContactMessagesAdmin(): Promise<ContactMessage[]> {
   try {

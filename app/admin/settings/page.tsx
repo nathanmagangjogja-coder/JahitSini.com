@@ -4,7 +4,7 @@ import { sanitizeDigits } from "@/lib/inputGuards";
 
 import * as React from "react";
 import {
-  Mail, Phone, MapPin, Globe, Clock, Bell, Save, Upload, ShieldCheck, Loader2, ImageIcon,
+  Mail, Phone, MapPin, Globe, Clock, Bell, Save, ShieldCheck, Loader2, ImageIcon,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/Button";
@@ -14,6 +14,7 @@ import { Input, Textarea } from "@/components/ui/Input";
 import { getBusinessSettingsRemote, updateBusinessSettingsRemote, BusinessSettings } from "@/lib/settings";
 import { parseCoordsFromText, isShortGoogleMapsLink } from "@/lib/mapsLink";
 import { useToast } from "@/components/ui/Toast";
+import { BrandAssetUploader } from "@/components/admin/BrandAssetUploader";
 
 const defaultSettings: BusinessSettings = {
   whatsapp: "",
@@ -465,21 +466,29 @@ export default function AdminSettingsPage() {
             </CardHeader>
             <CardContent className="pt-0 space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
-                {["Logo Header", "Favicon"].map((label) => (
-                  <div
-                    key={label}
-                    className="relative rounded-2xl border-2 border-dashed border-brand-border bg-brand-bg/30 p-6 text-center opacity-70 cursor-not-allowed"
-                    title="Fitur upload logo segera hadir"
-                  >
-                    <Upload className="h-7 w-7 text-slate-400 mx-auto mb-2" />
-                    <div className="text-sm font-medium text-brand-text">{label}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">
-                      {label === "Logo Header" ? "SVG / PNG · maks 200 KB" : "ICO / PNG · 32x32 px"}
-                    </div>
-                    <Badge variant="outline" className="mt-3">Segera Hadir</Badge>
-                  </div>
-                ))}
+                <BrandAssetUploader
+                  kind="logo"
+                  label="Logo Header"
+                  hint="SVG / PNG · maks 200 KB"
+                  accept=".svg,.png,image/svg+xml,image/png"
+                  maxKB={200}
+                  currentUrl={cfg.logoUrl}
+                  onChange={(url) => setCfg((c) => ({ ...c, logoUrl: url || undefined }))}
+                />
+                <BrandAssetUploader
+                  kind="favicon"
+                  label="Favicon"
+                  hint="ICO / PNG · 32x32 px · maks 100 KB"
+                  accept=".ico,.png,image/png,image/x-icon"
+                  maxKB={100}
+                  currentUrl={cfg.faviconUrl}
+                  onChange={(url) => setCfg((c) => ({ ...c, faviconUrl: url || undefined }))}
+                />
               </div>
+              <p className="text-xs text-slate-500">
+                Logo menggantikan ikon dan teks brand di header, footer, dan sidebar admin. Favicon
+                muncul di tab browser. Hapus file untuk kembali ke tampilan bawaan.
+              </p>
             </CardContent>
           </Card>
 

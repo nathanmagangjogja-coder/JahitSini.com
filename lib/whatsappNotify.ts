@@ -1,11 +1,3 @@
-import { CHAT_GRACE_MS } from "./chatPolicy";
-
-/**
- * Notifikasi WhatsApp otomatis ke pelanggan (server only).
- * Provider: Fonnte (https://fonnte.com). Butuh env FONNTE_TOKEN.
- * Kalau token belum diisi, fungsi mengembalikan { sent:false, reason:"not_configured" }
- * dan TIDAK menggagalkan perubahan status.
- */
 export interface NotifyResult {
   sent: boolean;
   reason?: "not_configured" | "invalid_phone" | "provider_error" | "network_error";
@@ -27,16 +19,9 @@ export function buildOrderDoneMessage(o: {
   customerName: string;
   orderNumber: string;
   serviceName: string;
-  doneAt?: Date;
 }): string {
   const site = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/+$/, "");
   const link = site ? `${site}/tracking?order=${encodeURIComponent(o.orderNumber)}` : "";
-  const closes = new Date((o.doneAt ?? new Date()).getTime() + CHAT_GRACE_MS);
-  const jam = closes.toLocaleTimeString("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Jakarta",
-  });
 
   return [
     `Halo ${o.customerName},`,
@@ -44,8 +29,8 @@ export function buildOrderDoneMessage(o: {
     `Pesanan *${o.orderNumber}* (${o.serviceName}) sudah *SELESAI* dan siap diambil. Terima kasih telah mempercayakan jahitan Anda kepada Jahitsini.com 🙏`,
     "",
     link
-      ? `Ada pertanyaan? Chat admin melalui halaman pelacakan:\n${link}\n(Chat tersedia sampai pukul ${jam} WIB.)`
-      : `Ada pertanyaan? Balas pesan ini atau chat admin di halaman Lacak Pesanan sampai pukul ${jam} WIB.`,
+      ? `Cek detail pesananmu di:\n${link}\n\nAda pertanyaan? Balas pesan ini ya.`
+      : "Ada pertanyaan? Balas pesan ini ya.",
   ].join("\n");
 }
 

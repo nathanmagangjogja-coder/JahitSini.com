@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
-import { Scissors, Clock, ArrowRight } from "lucide-react";
+import { Scissors, Clock } from "lucide-react";
 import { categories } from "@/lib/data";
 import { getServicesRemote } from "@/lib/services";
 import { Card, CardContent } from "@/components/ui/Card";
 import { ServiceIcon } from "@/components/ui/ServiceIcon";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { formatRupiah } from "@/lib/utils";
-import Link from "next/link";
+import { ServiceWhatsAppButton } from "@/components/shared/ServiceWhatsAppButton";
 
 export const metadata: Metadata = {
   title: "Layanan - Jahitsini.com | Jasa Jahit, Permak & Reparasi Pakaian",
   description:
-    "Lihat daftar lengkap layanan Jahitsini.com: permak, reparasi, ganti resleting, sampai pasang kancing dengan harga transparan dan estimasi cepat.",
+    "Lihat daftar lengkap layanan Jahitsini.com: permak, reparasi, ganti resleting, sampai pasang kancing. Pilih layanan, lihat detailnya, lalu buat pesanan.",
 };
 
 // Daftar layanan bisa diubah admin, jadi selalu ambil data terbaru (tidak di-cache saat build).
@@ -33,9 +31,8 @@ export default async function LayananPage() {
               Pilih Layanan yang <span className="text-brand-green">Kamu Butuhkan</span>
             </h1>
             <p className="mt-4 text-lg text-slate-600 leading-relaxed max-w-2xl">
-              {services.length} jenis layanan jahit dan permak profesional. Harga mulai
-              transparan, estimasi waktu pengerjaan jelas. Pilih layanan, lihat
-              detailnya, lalu buat pesanan.
+              {services.length} jenis layanan jahit dan permak profesional. Estimasi waktu pengerjaan jelas.
+              Pilih layanan, lihat detailnya, lalu buat pesanan.
             </p>
           </div>
         </div>
@@ -83,24 +80,17 @@ export default async function LayananPage() {
                               {s.description}
                             </p>
                           </div>
-                          <div className="flex items-center justify-between pt-3 border-t border-brand-border/60">
-                            <div>
-                              <div className="text-[11px] text-slate-400">Mulai dari</div>
-                              <div className="font-extrabold text-brand-text text-lg">
-                                {formatRupiah(s.priceStart)}
-                              </div>
-                            </div>
+                          <div className="flex items-center justify-end pt-3 border-t border-brand-border/60">
                             <div className="text-xs text-slate-500 flex items-center gap-1">
                               <Clock className="h-3.5 w-3.5" />
                               {s.duration}
                             </div>
                           </div>
-                          <Button variant="secondary" className="w-full justify-between" asChild>
-                            <Link href={`/layanan/${s.id}`}>
-                              Lihat Detail & Pesan
-                              <ArrowRight className="h-4 w-4" />
-                            </Link>
-                          </Button>
+                          <ServiceWhatsAppButton
+                            service={{ name: s.name, categoryLabel: cat.name }}
+                            variant="secondary"
+                            className="w-full"
+                          />
                         </CardContent>
                       </Card>
                     ))}

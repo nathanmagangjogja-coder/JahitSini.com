@@ -14,7 +14,6 @@ Platform jasa jahit dan permak berbasis web, dibangun dengan **Next.js 14 (App R
   - Reparasi
   - Resleting
   - Aksesoris
-- 🧮 **Kalkulator Estimasi Biaya** — Estimasi harga berdasarkan layanan, tingkat kesulitan, dan jumlah.
 - 🔧 **Cara Kerja**
 - 📸 **Hasil Jahitan**
 - ❓ **FAQ**
@@ -50,7 +49,7 @@ Saat ini sistem menggunakan **satu admin**.
 
 ### Menu Admin
 
-- 📦 **Pesanan** — Ubah status, harga, dan balas chat.
+- 📦 **Pesanan** — Ubah status dan balas chat.
 - 👤 **Pelanggan**
 - ✉️ **Pesan Masuk**
 - 🧵 **Layanan**
@@ -165,7 +164,10 @@ Jalankan file pada `supabase/migrations/` **secara berurutan** melalui **Supabas
 | `0008_enable_realtime_orders.sql` | Realtime untuk tabel pesanan |
 | `0009_create_services.sql` | Tabel layanan |
 | `0010_rls_tighten.sql` | Pengetatan RLS (**wajib**) |
-| `0011_service_details.sql` | Kolom detail layanan |
+| `0011_brand_assets.sql` | Aset brand (logo, favicon) |
+| `0012_service_details.sql` | Kolom detail layanan |
+| `0015_add_map_coordinates.sql` | Koordinat peta workshop |
+| `0016_drop_price_columns.sql` | Hapus kolom harga (jalankan setelah deploy kode terbaru) |
 
 ### ⚠️ Catatan Migration
 

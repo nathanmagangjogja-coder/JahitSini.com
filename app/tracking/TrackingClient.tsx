@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { Search, PackageSearch, ArrowRight } from "lucide-react";
+import { Search, PackageSearch, ArrowRight, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
@@ -10,15 +9,14 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { getOrderByNumberRemote, Order } from "@/lib/orders";
 import { statusLabels, OrderStatus } from "@/lib/data";
 import { OrderTimeline } from "@/components/ui/OrderTimeline";
-import { formatRupiah } from "@/lib/utils";
-import { OrderChat } from "@/components/tracking/OrderChat";
+import { getBusinessSettingsRemote, buildWhatsAppLink } from "@/lib/settings";
 
 export default function TrackingClient() {
-  const router = useRouter();
   const [orderNumber, setOrderNumber] = React.useState("");
   const [found, setFound] = React.useState<Order | null>(null);
   const [notFound, setNotFound] = React.useState(false);
   const [searching, setSearching] = React.useState(false);
+  const [waLink, setWaLink] = React.useState<string | null>(null);
 
   const runSearch = React.useCallback(async (value: string) => {
     setSearching(true);
@@ -27,8 +25,18 @@ export default function TrackingClient() {
     const order = await getOrderByNumberRemote(value.trim());
     if (order) {
       setFound(order);
+      // Tombol "Chat via WhatsApp" di bawah: pesan terisi otomatis, langsung ke WA admin.
+      // Pengganti fitur chat dalam-halaman yang sudah tidak dipakai lagi.
+      const settings = await getBusinessSettingsRemote();
+      setWaLink(
+        buildWhatsAppLink(
+          settings,
+          `Halo Jahitsini, saya ingin tanya soal pesanan *${order.orderNumber}* (${order.serviceName}).`
+        )
+      );
     } else {
       setNotFound(true);
+      setWaLink(null);
     }
     setSearching(false);
   }, []);
@@ -149,18 +157,6 @@ export default function TrackingClient() {
                         <div className="text-slate-500 text-xs">Jumlah</div>
                         <div className="font-semibold text-brand-text">{found.quantity} pcs</div>
                       </div>
-                      <div>
-                        <div className="text-slate-500 text-xs">Tingkat Kesulitan</div>
-                        <div className="font-semibold capitalize text-brand-text">
-                          {found.difficulty}
-                        </div>
-                      </div>
-                      <div className="col-span-2">
-                        <div className="text-slate-500 text-xs">Estimasi Biaya</div>
-                        <div className="font-bold text-brand-green text-lg">
-                          {formatRupiah(found.priceFinal || found.priceEstimate || 0)}
-                        </div>
-                      </div>
                     </div>
                   </div>
                   {found.notes && (
@@ -211,7 +207,28 @@ export default function TrackingClient() {
               </Card>
             )}
 
-            <OrderChat key={found.orderNumber} orderNumber={found.orderNumber} />
+            <Card>
+              <CardContent className="p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-brand-text">Ada pertanyaan soal pesanan ini?</h3>
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    Chat langsung dengan admin lewat WhatsApp, nomor pesanan sudah otomatis terisi.
+                  </p>
+                </div>
+                {waLink ? (
+                  <Button asChild size="lg" className="shrink-0">
+                    <a href={waLink} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="h-4 w-4" />
+                      Chat via WhatsApp
+                    </a>
+                  </Button>
+                ) : (
+                  <Button asChild variant="outline" size="lg" className="shrink-0">
+                    <a href="/hubungi-kami">Hubungi Kami</a>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
 

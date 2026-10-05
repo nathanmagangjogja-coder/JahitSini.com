@@ -1,10 +1,10 @@
-import { ADMIN_SESSION_SECRET } from "./adminConfig";
+import { getSessionSecret } from "./adminConfig";
 
 const COOKIE_NAME = "jahitsini_admin_session";
 const SESSION_DURATION_SECONDS = 60 * 60; // 1 jam
 
 function getSecret(): string {
-  return ADMIN_SESSION_SECRET;
+  return getSessionSecret();
 }
 
 function toHex(buf: ArrayBuffer): string {

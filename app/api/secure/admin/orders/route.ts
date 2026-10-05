@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateAdminSession } from "@/lib/adminApiGuard";
 import { getServiceRoleOrThrow } from "@/lib/supabaseServiceRole";
-import { mapDbOrderToOrder, Order, sampleOrders } from "@/lib/orders";
+import { mapDbOrderToOrder, Order } from "@/lib/orders";
 import { OrderStatus } from "@/lib/data";
 
 export async function GET(request: NextRequest) {
@@ -37,32 +37,11 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query;
 
-    let orders: Order[];
     if (error || !data) {
-      if (isDevEnv) {
-        orders = sampleOrders;
-        if (status) orders = orders.filter((o) => o.status === status);
-        if (search) {
-          const s = search.toLowerCase();
-          orders = orders.filter(
-            (o) =>
-              o.orderNumber.toLowerCase().includes(s) ||
-              o.customerName.toLowerCase().includes(s) ||
-              o.customerPhone.toLowerCase().includes(s) ||
-              (o.customerEmail && o.customerEmail.toLowerCase().includes(s))
-          );
-        }
-        orders = orders.slice(0, limit);
-      } else {
-        console.error("GET /api/secure/admin/orders query error:", error);
-        return NextResponse.json(
-          { success: false, error: isDevEnv ? error.message : "Internal error" },
-          { status: 500 }
-        );
-      }
-    } else {
-      orders = data.map(mapDbOrderToOrder);
+      console.error("GET /api/secure/admin/orders query error:", error);
+      return NextResponse.json({ success: false, error: "Internal error" }, { status: 500 });
     }
+    const orders: Order[] = data.map(mapDbOrderToOrder);
 
     return NextResponse.json({ success: true, data: orders });
   } catch (err: unknown) {

@@ -1,18 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  PackageCheck,
-  Sparkles,
-  CheckCircle2,
-  Send,
-  Search,
-  FileText,
-  ThumbsUp,
-  Pen,
-  Award,
-  ShieldCheck,
-  ArrowRight,
-} from "lucide-react";
+import { PackageCheck, CheckCircle2, Send, Search, FileText, ThumbsUp, Pen, Award, ShieldCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -28,7 +16,7 @@ const steps = [
     icon: Send,
     step: "01",
     title: "Pilih Layanan & Kirim Detail",
-    desc: "Pilih jenis layanan di halaman Layanan, gunakan kalkulator estimasi biaya, isi detail, dan kirim foto pakaianmu.",
+    desc: "Pilih jenis layanan di halaman Layanan, isi detail, dan kirim foto pakaianmu.",
   },
   {
     icon: PackageCheck,
@@ -45,8 +33,8 @@ const steps = [
   {
     icon: FileText,
     step: "04",
-    title: "Estimasi & Persetujuan",
-    desc: "Kamu dapat estimasi harga final dan waktu pengerjaan. Jika setuju, proses dilanjutkan; jika tidak, pakaian bisa dikembalikan.",
+    title: "Detail & Persetujuan",
+    desc: "Kamu dapat detail jadwal pengerjaan. Jika setuju, proses dilanjutkan; jika tidak, pakaian bisa dikembalikan.",
   },
   {
     icon: Pen,
@@ -126,14 +114,14 @@ export default function CaraKerjaPage() {
                   <div>
                     <h3 className="font-bold text-brand-text text-lg">Garansi Hasil Rapi</h3>
                     <p className="text-sm text-slate-600 mt-1">
-                      Jika hasil tidak sesuai dengan kesepakatan, kami reparasi ulang tanpa biaya tambahan.
+                      Jika hasil tidak sesuai dengan kesepakatan, kami reparasi ulang gratis.
                     </p>
                   </div>
                 </div>
                 <ul className="space-y-3 text-sm">
                   {[
                     "Penjahit berpengalaman 5+ tahun",
-                    "Harga transparan tanpa biaya tersembunyi",
+                    "Detail jelas tanpa kejutan",
                     "Update status pesanan real-time",
                     "Konsultasi gratis sebelum pesanan",
                     "Pengerjaan cepat rata-rata 1-3 hari",

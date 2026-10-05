@@ -120,7 +120,7 @@ export default function ContactClient({
             </h1>
             <p className="mt-4 text-lg text-slate-600 leading-relaxed max-w-2xl">
               Konsultasikan kebutuhan jahitmu secara gratis. Kami siap membantu
-              memilihkan layanan yang tepat dan memberikan estimasi biaya awal.
+              memilihkan layanan yang tepat dan memberikan info detail awal.
             </p>
           </div>
         </div>

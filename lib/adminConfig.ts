@@ -1,16 +1,9 @@
-/**
- * Konfigurasi login admin.
- *
- * Hanya ada SATU admin: baris di tabel Supabase `admin_users` dengan
- * username = ADMIN_USERNAME. Password-nya (hash bcrypt) disimpan di kolom
- * `password_hash` dan bisa diganti dari /admin/password.
- * Baris lain di tabel itu (mis. "superadmin") DIABAIKAN dan tidak bisa login.
- */
 export const ADMIN_USERNAME = "admin";
-
-/**
- * Kunci penanda-tangan cookie sesi. Sebaiknya isi env ADMIN_SESSION_SECRET
- * (string acak panjang) di .env / hosting; nilai di bawah hanya cadangan.
- */
-export const ADMIN_SESSION_SECRET =
-  process.env.ADMIN_SESSION_SECRET || "jahitsini-session-secret-ganti-saya";
+export function getSessionSecret(): string {
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("ADMIN_SESSION_SECRET wajib diisi di production.");
+  }
+  return "dev-only-secret-jangan-dipakai-di-production";
+}

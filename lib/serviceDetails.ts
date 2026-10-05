@@ -15,16 +15,10 @@ export interface ServiceDetails {
   includes: string[]; // "Yang termasuk dalam layanan"
   steps: ServiceStep[]; // tahapan pengerjaan
   tips: string[]; // tips sebelum mengirim pakaian
-  priceNotes: string; // penjelasan harga
   faqs: ServiceFaq[];
 }
 
 export type ServiceFull = Service & ServiceDetails;
-
-/* ------------------------------------------------------------------ */
-/* Teks bawaan per kategori (dipakai kalau layanan belum punya detail) */
-/* ------------------------------------------------------------------ */
-
 const categoryDefaults: Record<Service["category"], Partial<ServiceDetails>> = {
   permak: {
     steps: [
@@ -38,8 +32,6 @@ const categoryDefaults: Record<Service["category"], Partial<ServiceDetails>> = {
       "Sertakan ukuran yang diinginkan (misalnya panjang dalam cm) bila kamu sudah tahu.",
       "Cuci dan setrika pakaian lebih dulu agar ukuran tidak berubah setelah dipermak.",
     ],
-    priceNotes:
-      "Harga mulai dari tertera adalah harga dasar. Biaya akhir bergantung pada jenis kain, banyaknya bagian yang diubah, dan tingkat kesulitan. Harga pasti dikonfirmasi setelah pakaian kami periksa, dan pengerjaan baru dimulai setelah kamu setuju.",
   },
   reparasi: {
     steps: [
@@ -49,12 +41,10 @@ const categoryDefaults: Record<Service["category"], Partial<ServiceDetails>> = {
       { title: "Pengecekan kekuatan", description: "Jahitan diuji kekuatannya, lalu pakaian dirapikan sebelum dikembalikan." },
     ],
     tips: [
-      "Kirim foto dari dekat pada bagian yang rusak supaya perkiraan biaya lebih akurat.",
+      "Kirim foto dari dekat pada bagian yang rusak supaya penanganan lebih tepat.",
       "Jangan menarik atau menggunting bagian yang sobek karena bisa memperlebar kerusakan.",
       "Bila kamu punya sisa kain atau benang asli, sertakan saat mengirim pakaian.",
     ],
-    priceNotes:
-      "Biaya bergantung pada ukuran kerusakan, jenis kain, dan letaknya. Kerusakan kecil biasanya selesai dengan harga dasar, sedangkan kerusakan luas atau di area yang sulit dijangkau bisa lebih tinggi. Harga pasti dikonfirmasi sebelum dikerjakan.",
   },
   resleting: {
     steps: [
@@ -68,8 +58,6 @@ const categoryDefaults: Record<Service["category"], Partial<ServiceDetails>> = {
       "Kosongkan isi saku atau tas sebelum dikirim.",
       "Kirim foto resleting yang rusak, terutama bagian kepala dan giginya.",
     ],
-    priceNotes:
-      "Harga dasar sudah termasuk ongkos pasang. Harga resleting bergantung pada panjang, bahan (plastik, logam, atau waterproof), dan mereknya, sehingga total biaya dikonfirmasi setelah pemeriksaan.",
   },
   aksesoris: {
     steps: [
@@ -83,17 +71,10 @@ const categoryDefaults: Record<Service["category"], Partial<ServiceDetails>> = {
       "Kalau tidak ada, kami bantu carikan yang paling mendekati.",
       "Kirim foto bagian yang ingin dipasangi aksesoris.",
     ],
-    priceNotes:
-      "Harga dasar dihitung per pakaian. Bila jumlah kancing banyak atau bahannya tebal, biaya bisa menyesuaikan. Harga pasti dikonfirmasi sebelum dikerjakan.",
   },
 };
 
 const genericFaqs: ServiceFaq[] = [
-  {
-    question: "Apakah harga bisa berubah setelah pakaian diperiksa?",
-    answer:
-      "Harga yang tampil adalah perkiraan awal. Setelah pakaian kami periksa, harga pasti dikonfirmasi lebih dulu dan pengerjaan hanya dimulai setelah kamu setuju.",
-  },
   {
     question: "Bagaimana cara memantau pesanan saya?",
     answer:
@@ -102,13 +83,10 @@ const genericFaqs: ServiceFaq[] = [
   {
     question: "Bagaimana kalau hasilnya tidak sesuai?",
     answer:
-      "Jika ada ketidaksesuaian dari hasil kerja kami, kami perbaiki ulang tanpa biaya tambahan.",
+      "Jika ada ketidaksesuaian dari hasil kerja kami, kami perbaiki ulang gratis.",
   },
 ];
 
-/* ------------------------------------------------------------------ */
-/* Teks bawaan per layanan (kunci = id layanan)                        */
-/* ------------------------------------------------------------------ */
 
 const serviceDefaults: Record<string, Partial<ServiceDetails>> = {
   "permak-potong-celana": {
@@ -126,7 +104,7 @@ const serviceDefaults: Record<string, Partial<ServiceDetails>> = {
       "Untuk jeans yang akan menyusut, cuci dulu sebelum dipotong.",
     ],
     faqs: [
-      { question: "Apakah bisa mempertahankan jahitan asli jeans?", answer: "Bisa. Pilih opsi original hem di kolom catatan. Biaya bisa sedikit lebih tinggi karena teknik jahitnya lebih rumit." },
+      { question: "Apakah bisa mempertahankan jahitan asli jeans?", answer: "Bisa. Pilih opsi original hem di kolom catatan. Teknik jahitnya sedikit lebih rumit tapi hasil lebih rapi." },
       { question: "Apakah celana bisa dipanjangkan lagi nanti?", answer: "Hanya jika kain lipatan di bagian dalam masih cukup. Kami sarankan memotong tidak lebih pendek dari yang benar-benar diperlukan." },
     ],
   },
@@ -252,7 +230,7 @@ const serviceDefaults: Record<string, Partial<ServiceDetails>> = {
     tips: [
       "Tandai semua jahitan yang lepas agar tidak ada yang terlewat.",
       "Kirim foto bagian jahitan yang bermasalah.",
-      "Bila banyak jahitan yang lepas, sebutkan agar perkiraan biaya lebih akurat.",
+      "Bila banyak jahitan yang lepas, sebutkan agar penanganan lebih tepat.",
     ],
     faqs: [
       { question: "Apakah jahitan lain ikut diperiksa?", answer: "Ya, kami cek area di sekitarnya dan memberi tahu bila ada jahitan lain yang mulai lemah." },
@@ -325,9 +303,6 @@ const serviceDefaults: Record<string, Partial<ServiceDetails>> = {
       "Bila tidak ada, kirim foto kancing lain di pakaian yang sama.",
       "Sebutkan berapa kancing yang perlu dipasang.",
     ],
-    faqs: [
-      { question: "Apakah kancing sudah termasuk harga?", answer: "Harga dasar untuk ongkos pasang. Kancing baru bisa kami sediakan dengan biaya terpisah bila kamu tidak membawa sendiri." },
-    ],
   },
   "aksesoris-ganti-kancing": {
     longDescription:
@@ -348,11 +323,6 @@ const serviceDefaults: Record<string, Partial<ServiceDetails>> = {
     ],
   },
 };
-
-/* ------------------------------------------------------------------ */
-/* Gabungkan data layanan + detail (database > bawaan layanan > kategori) */
-/* ------------------------------------------------------------------ */
-
 const notEmpty = (v: unknown): boolean =>
   Array.isArray(v) ? v.length > 0 : typeof v === "string" ? v.trim().length > 0 : v != null;
 
@@ -368,7 +338,7 @@ function pick<K extends keyof ServiceDetails>(
   if (notEmpty(fromService)) return fromService as ServiceDetails[K];
   const fromCategory = categoryDefaults[category]?.[key];
   if (notEmpty(fromCategory)) return fromCategory as ServiceDetails[K];
-  return (key === "faqs" ? genericFaqs : key === "longDescription" || key === "priceNotes" ? "" : []) as ServiceDetails[K];
+  return (key === "faqs" ? genericFaqs : key === "longDescription" ? "" : []) as ServiceDetails[K];
 }
 
 export function withDetails(base: Service, raw: Partial<ServiceDetails> = {}): ServiceFull {
@@ -377,16 +347,10 @@ export function withDetails(base: Service, raw: Partial<ServiceDetails> = {}): S
     includes: pick("includes", raw, base.id, base.category),
     steps: pick("steps", raw, base.id, base.category),
     tips: pick("tips", raw, base.id, base.category),
-    priceNotes: pick("priceNotes", raw, base.id, base.category),
     faqs: pick("faqs", raw, base.id, base.category),
   };
   return { ...base, ...detail };
 }
-
-/* ------------------------------------------------------------------ */
-/* Pembersih data dari database / form admin                           */
-/* ------------------------------------------------------------------ */
-
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
 export function cleanList(v: unknown): string[] {
@@ -407,11 +371,6 @@ export function cleanFaqs(v: unknown): ServiceFaq[] {
     .filter((x) => x.question && x.answer)
     .slice(0, 20);
 }
-
-/* ------------------------------------------------------------------ */
-/* Konversi teks <-> data untuk form admin                             */
-/* ------------------------------------------------------------------ */
-
 export const listToText = (list: string[]) => list.join("\n");
 export const textToList = (text: string) => cleanList(text.split("\n"));
 
