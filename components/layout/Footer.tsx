@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { Scissors, MapPin, Phone, Mail, Instagram, Facebook, MessageCircle } from "lucide-react";
+import { Scissors, MapPin, Phone, Mail, Instagram, Facebook, Youtube, MessageCircle } from "lucide-react";
 import { getBusinessSettingsRemote, buildWhatsAppLink } from "@/lib/settings";
 
 export default async function Footer() {
   const cfg = await getBusinessSettingsRemote();
   const logoUrl = cfg.logoUrl || null;
   const waLink = buildWhatsAppLink(cfg, "Halo Jahitsini, saya ingin bertanya tentang layanan.");
-  const instagramUrl = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "";
-  const facebookUrl = process.env.NEXT_PUBLIC_FACEBOOK_URL || "";
+  const instagramUrl = cfg.instagramUrl;
+  const facebookUrl = cfg.facebookUrl;
+  const tiktokUrl = cfg.tiktokUrl;
+  const youtubeUrl = cfg.youtubeUrl;
   const socialCls =
     "flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-brand-border text-slate-500 hover:text-brand-green hover:border-brand-green/40 transition-colors";
   const showAvailable = !cfg.whatsapp && !cfg.phone && !cfg.email && !cfg.address;
@@ -50,6 +52,18 @@ export default async function Footer() {
               {facebookUrl && (
                 <a href={facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className={socialCls}>
                   <Facebook className="h-4 w-4" />
+                </a>
+              )}
+              {tiktokUrl && (
+                <a href={tiktokUrl} target="_blank" rel="noopener noreferrer" aria-label="TikTok" className={socialCls}>
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+                    <path d="M16.6 5.8A4.3 4.3 0 0 1 15.5 3h-3.1v12.4a2.6 2.6 0 1 1-2.6-2.6c.3 0 .5 0 .8.1V9.7a5.7 5.7 0 1 0 4.9 5.6V9a7.4 7.4 0 0 0 4.3 1.4V7.3a4.3 4.3 0 0 1-3.2-1.5z" />
+                  </svg>
+                </a>
+              )}
+              {youtubeUrl && (
+                <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" aria-label="YouTube" className={socialCls}>
+                  <Youtube className="h-4 w-4" />
                 </a>
               )}
               <Link href="/hubungi-kami" aria-label="Hubungi Kami" className={socialCls}>

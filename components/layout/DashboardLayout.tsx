@@ -4,11 +4,9 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  LayoutDashboard, Package, Settings, User, LogOut, Scissors, ChevronRight, MessageSquare, Image as ImageIcon, KeyRound } from "lucide-react";
+  Settings, LogOut, Scissors, ChevronRight, Image as ImageIcon, KeyRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { getAllOrdersRemote } from "@/lib/orders";
 import { getBusinessSettingsRemote } from "@/lib/settings";
 
 export interface NavItem {
@@ -19,10 +17,6 @@ export interface NavItem {
 }
 
 export const adminNavItems: NavItem[] = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/orders", label: "Pesanan", icon: Package },
-  { href: "/admin/customers", label: "Pelanggan", icon: User },
-  { href: "/admin/messages", label: "Pesan", icon: MessageSquare },
   { href: "/admin/services", label: "Layanan", icon: Scissors },
   { href: "/admin/media", label: "Foto Website", icon: ImageIcon },
   { href: "/admin/settings", label: "Pengaturan", icon: Settings },
@@ -43,19 +37,10 @@ export function DashboardLayout({ title, subtitle, children, width = "wide" }: S
   const router = useRouter();
   const items = adminNavItems;
   const homeHref = "/admin";
-  const [activeOrderCount, setActiveOrderCount] = React.useState<number | null>(null);
   const [logoUrl, setLogoUrl] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     getBusinessSettingsRemote().then((cfg) => setLogoUrl(cfg.logoUrl || null));
-  }, []);
-
-  React.useEffect(() => {
-    async function loadCount() {
-      const all = await getAllOrdersRemote();
-      setActiveOrderCount(all.filter((o) => o.status !== "done").length);
-    }
-    loadCount();
   }, []);
 
   const profileName = "Admin Jahitsini";
@@ -112,13 +97,6 @@ export function DashboardLayout({ title, subtitle, children, width = "wide" }: S
             >
               <Icon className={cn("h-4 w-4 shrink-0", active ? "text-brand-green" : "text-slate-400 group-hover:text-brand-text")} />
               <span className="flex-1">{item.label}</span>
-              {item.href === "/admin/orders" &&
-                activeOrderCount !== null &&
-                activeOrderCount > 0 && (
-                  <Badge variant="outline" className="!text-[10px] !px-1.5 !py-0.5">
-                    {activeOrderCount}
-                  </Badge>
-                )}
               {active && <ChevronRight className="h-3.5 w-3.5 text-brand-green" />}
             </Link>
           );

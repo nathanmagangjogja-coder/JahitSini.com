@@ -20,7 +20,6 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Input, Textarea } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import { sanitizeName, sanitizePhone, isValidName, isValidPhone } from "@/lib/inputGuards";
-import { sendContactMessage } from "@/lib/contact";
 import { getContactWhatsAppLink } from "@/lib/whatsappOrder";
 import { WorkshopMap } from "@/components/shared/WorkshopMap";
 
@@ -86,9 +85,7 @@ export default function ContactClient({
       message: form.message.trim(),
     };
 
-    // Tersimpan sebagai arsip di Admin > Pesan (opsional; kegagalan simpan tidak
-    // menghalangi pelanggan mengirim pertanyaannya ke WhatsApp).
-    await sendContactMessage(contactInput);
+    // Pertanyaan dikirim lewat WhatsApp (tidak disimpan di database).
     const link = await getContactWhatsAppLink(contactInput);
     setSubmitting(false);
 
@@ -100,9 +97,8 @@ export default function ContactClient({
       toast({
         variant: "error",
         title: "Nomor WhatsApp belum diatur",
-        description: "Pertanyaanmu tersimpan, tim kami akan menghubungi lewat nomor WhatsApp yang kamu isi.",
+        description: "Maaf, nomor WhatsApp kami belum tersedia. Silakan coba lagi nanti.",
       });
-      setForm({ name: "", phone: "", email: "", subject: "", message: "" });
     }
   };
 

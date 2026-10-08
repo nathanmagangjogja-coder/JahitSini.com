@@ -40,7 +40,7 @@ const steps = [
     icon: Pen,
     step: "05",
     title: "Proses Jahit oleh Ahli",
-    desc: "Penjahit profesional mengerjakan pakaianmu dengan standar tinggi. Kamu bisa pantau progress lewat halaman Lacak Pesanan.",
+    desc: "Penjahit profesional mengerjakan pakaianmu dengan standar tinggi. Kamu bisa menanyakan progresnya kapan saja lewat WhatsApp.",
   },
   {
     icon: Award,

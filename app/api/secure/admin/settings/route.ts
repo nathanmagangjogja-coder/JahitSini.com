@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateAdminSession } from "@/lib/adminApiGuard";
 import { getServiceRoleOrThrow } from "@/lib/supabaseServiceRole";
 import { BusinessSettings } from "@/lib/settings";
+import { normalizeSocialUrl, socialLabel, type SocialPlatform } from "@/lib/socialLinks";
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -29,6 +30,25 @@ export async function PATCH(request: NextRequest) {
     if (body.email !== undefined) payload.email = body.email;
     if (body.address !== undefined) payload.address = body.address;
     if (body.operatingHours !== undefined) payload.operating_hours = body.operatingHours;
+    if (body.websiteUrl !== undefined) payload.website_url = body.websiteUrl;
+
+    const socialFields: [keyof BusinessSettings, string, SocialPlatform][] = [
+      ["instagramUrl", "instagram_url", "instagram"],
+      ["facebookUrl", "facebook_url", "facebook"],
+      ["tiktokUrl", "tiktok_url", "tiktok"],
+      ["youtubeUrl", "youtube_url", "youtube"],
+    ];
+    for (const [key, column, platform] of socialFields) {
+      if (body[key] === undefined) continue;
+      const clean = normalizeSocialUrl(platform, body[key]);
+      if (clean === null) {
+        return NextResponse.json(
+          { success: false, error: `Tautan ${socialLabel(platform)} tidak valid. Isi username (mis. jahitsini) atau link profil ${socialLabel(platform)}.` },
+          { status: 400 }
+        );
+      }
+      payload[column] = clean;
+    }
     if (body.mapLat !== undefined) {
       if (body.mapLat !== null && (typeof body.mapLat !== "number" || Math.abs(body.mapLat) > 90)) {
         return NextResponse.json({ success: false, error: "Latitude tidak valid (-90 s/d 90)." }, { status: 400 });
@@ -41,12 +61,6 @@ export async function PATCH(request: NextRequest) {
       }
       payload.map_lng = body.mapLng;
     }
-    if (body.notifyNewOrderEmail !== undefined)
-      payload.notify_new_order_email = body.notifyNewOrderEmail;
-    if (body.notifyUrgentWhatsapp !== undefined)
-      payload.notify_urgent_whatsapp = body.notifyUrgentWhatsapp;
-    if (body.notifyDailyReport !== undefined)
-      payload.notify_daily_report = body.notifyDailyReport;
     if (body.photoMaxDimension !== undefined)
       payload.photo_max_dimension = body.photoMaxDimension;
 
@@ -80,11 +94,12 @@ export async function PATCH(request: NextRequest) {
         address: body.address ?? "",
         operatingHours: body.operatingHours ?? "",
         websiteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "",
+        instagramUrl: "",
+        facebookUrl: "",
+        tiktokUrl: "",
+        youtubeUrl: "",
         mapLat: body.mapLat ?? null,
         mapLng: body.mapLng ?? null,
-        notifyNewOrderEmail: body.notifyNewOrderEmail ?? true,
-        notifyUrgentWhatsapp: body.notifyUrgentWhatsapp ?? true,
-        notifyDailyReport: body.notifyDailyReport ?? false,
         photoMaxDimension: body.photoMaxDimension ?? 1600,
       };
     } else {
@@ -95,11 +110,12 @@ export async function PATCH(request: NextRequest) {
         address: freshData.address ?? "",
         operatingHours: freshData.operating_hours ?? "",
         websiteUrl: freshData.website_url ?? process.env.NEXT_PUBLIC_SITE_URL ?? "",
+        instagramUrl: freshData.instagram_url ?? "",
+        facebookUrl: freshData.facebook_url ?? "",
+        tiktokUrl: freshData.tiktok_url ?? "",
+        youtubeUrl: freshData.youtube_url ?? "",
         mapLat: typeof freshData.map_lat === "number" ? freshData.map_lat : null,
         mapLng: typeof freshData.map_lng === "number" ? freshData.map_lng : null,
-        notifyNewOrderEmail: freshData.notify_new_order_email ?? true,
-        notifyUrgentWhatsapp: freshData.notify_urgent_whatsapp ?? true,
-        notifyDailyReport: freshData.notify_daily_report ?? false,
         photoMaxDimension: freshData.photo_max_dimension ?? 1600,
       };
     }

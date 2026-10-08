@@ -6,7 +6,7 @@ const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").re
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const pages = ["", "/layanan", "/cara-kerja", "/hasil-jahitan", "/faq", "/tracking", "/hubungi-kami"];
+  const pages = ["", "/layanan", "/cara-kerja", "/hasil-jahitan", "/faq", "/hubungi-kami"];
   const now = new Date();
 
   const staticEntries: MetadataRoute.Sitemap = pages.map((path) => ({

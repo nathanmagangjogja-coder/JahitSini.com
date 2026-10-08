@@ -100,9 +100,6 @@ export default function Navbar() {
               </a>
             </Button>
           ) : null}
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/tracking">Lacak Pesanan</Link>
-          </Button>
           <Button size="sm" asChild>
             <Link href="/layanan">Pesan Jasa</Link>
           </Button>
@@ -166,11 +163,6 @@ export default function Navbar() {
                   </a>
                 </Button>
               ) : null}
-              <Button variant="outline" asChild>
-                <Link href="/tracking" onClick={() => setOpen(false)}>
-                  Lacak Pesanan
-                </Link>
-              </Button>
               <Button asChild>
                 <Link href="/layanan" onClick={() => setOpen(false)}>
                   Pesan Jasa

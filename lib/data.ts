@@ -1,13 +1,3 @@
-export type OrderStatus =
-  | "received"
-  | "checking"
-  | "estimation"
-  | "approved"
-  | "sewing"
-  | "qc"
-  | "done"
-  | "cancelled";
-
 export interface Service {
   id: string;
   name: string;
@@ -152,34 +142,6 @@ export const services: Service[] = [
     icon: "refresh-cw",
   },
 ];
-
-export const statusLabels: Record<OrderStatus, { label: string; color: string }> = {
-  received: { label: "Pesanan diterima", color: "bg-slate-100 text-slate-700 border-slate-200" },
-  checking: { label: "Pemeriksaan", color: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  estimation: { label: "Estimasi", color: "bg-blue-50 text-blue-700 border-blue-200" },
-  approved: { label: "Persetujuan", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-  sewing: { label: "Proses jahit", color: "bg-purple-50 text-purple-700 border-purple-200" },
-  qc: { label: "QC", color: "bg-orange-50 text-orange-700 border-orange-200" },
-  done: { label: "Selesai", color: "bg-green-50 text-green-700 border-green-200" },
-  cancelled: { label: "Dibatalkan", color: "bg-red-50 text-red-700 border-red-200" },
-};
-
-export const statusTimeline: OrderStatus[] = [
-  "received",
-  "checking",
-  "estimation",
-  "approved",
-  "sewing",
-  "qc",
-  "done",
-];
-
-/**
- * Semua status yang bisa dipilih admin (dropdown filter & ubah status).
- * "cancelled" sengaja TIDAK dimasukkan ke statusTimeline karena bukan bagian
- * dari alur linear (dipakai indexOf untuk menghitung progress bar).
- */
-export const orderStatusOptions: OrderStatus[] = [...statusTimeline, "cancelled"];
 
 export interface FAQItem {
   question: string;

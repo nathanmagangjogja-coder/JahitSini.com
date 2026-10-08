@@ -4,7 +4,7 @@ import { sanitizeDigits } from "@/lib/inputGuards";
 
 import * as React from "react";
 import {
-  Mail, Phone, MapPin, Globe, Clock, Bell, Save, ShieldCheck, Loader2, ImageIcon,
+  Mail, Phone, MapPin, Globe, Clock, Save, ShieldCheck, Loader2, ImageIcon, Instagram, Facebook, Youtube, Music2,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/Button";
@@ -23,11 +23,12 @@ const defaultSettings: BusinessSettings = {
   address: "",
   operatingHours: "Senin-Jumat: 08.00-17.00",
   websiteUrl: "",
+  instagramUrl: "",
+  facebookUrl: "",
+  tiktokUrl: "",
+  youtubeUrl: "",
   mapLat: null,
   mapLng: null,
-  notifyNewOrderEmail: true,
-  notifyUrgentWhatsapp: true,
-  notifyDailyReport: false,
   photoMaxDimension: 1600,
 };
 
@@ -36,7 +37,6 @@ export default function AdminSettingsPage() {
   const [cfg, setCfg] = React.useState<BusinessSettings>(defaultSettings);
   const [loading, setLoading] = React.useState(true);
   const [savingInfo, setSavingInfo] = React.useState(false);
-  const [savingNotif, setSavingNotif] = React.useState<string | null>(null);
   const [savingPhoto, setSavingPhoto] = React.useState(false);
   const [photoDimError, setPhotoDimError] = React.useState("");
   const [savingMap, setSavingMap] = React.useState(false);
@@ -78,6 +78,10 @@ export default function AdminSettingsPage() {
       address: cfg.address,
       operatingHours: cfg.operatingHours,
       websiteUrl: cfg.websiteUrl,
+      instagramUrl: cfg.instagramUrl,
+      facebookUrl: cfg.facebookUrl,
+      tiktokUrl: cfg.tiktokUrl,
+      youtubeUrl: cfg.youtubeUrl,
     });
     setSavingInfo(false);
     toast(
@@ -85,17 +89,6 @@ export default function AdminSettingsPage() {
         ? { variant: "success", title: "Pengaturan tersimpan" }
         : { variant: "error", title: "Gagal menyimpan", description: "Pastikan Supabase sudah dikonfigurasi." }
     );
-  };
-
-  const handleToggleNotif = async (key: keyof BusinessSettings, value: boolean) => {
-    setCfg((c) => ({ ...c, [key]: value }));
-    setSavingNotif(key);
-    const ok = await updateBusinessSettingsRemote({ [key]: value } as Partial<BusinessSettings>);
-    setSavingNotif(null);
-    if (!ok) {
-      toast({ variant: "error", title: "Gagal menyimpan preferensi" });
-      setCfg((c) => ({ ...c, [key]: !value }));
-    }
   };
 
   const handleSavePhotoDimension = async (e: React.FormEvent) => {
@@ -185,24 +178,6 @@ export default function AdminSettingsPage() {
         : { variant: "error", title: "Gagal menyimpan", description: "Pastikan Supabase sudah dikonfigurasi." }
     );
   };
-
-  const notifOptions: { key: keyof BusinessSettings; title: string; desc: string }[] = [
-    {
-      key: "notifyNewOrderEmail",
-      title: "Email Pesanan Baru",
-      desc: "Dapatkan email setiap ada pesanan masuk",
-    },
-    {
-      key: "notifyUrgentWhatsapp",
-      title: "WhatsApp Notifikasi Penting",
-      desc: "Kirim WA untuk pesanan darurat",
-    },
-    {
-      key: "notifyDailyReport",
-      title: "Laporan Harian Pendapatan",
-      desc: "Ringkasan pendapatan harian via email",
-    },
-  ];
 
   return (
     <DashboardLayout
@@ -308,6 +283,34 @@ export default function AdminSettingsPage() {
                   />
                 </div>
               </div>
+              <div className="space-y-3 pt-2">
+                <div>
+                  <div className="text-sm font-semibold text-brand-text">Media Sosial</div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Isi username atau link profil. Ikon di footer website hanya tampil untuk kolom yang diisi.
+                  </p>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {([
+                    ["instagramUrl", "Instagram", Instagram, "jahitsini atau https://instagram.com/jahitsini"],
+                    ["facebookUrl", "Facebook", Facebook, "https://facebook.com/jahitsini"],
+                    ["tiktokUrl", "TikTok", Music2, "jahitsini atau https://tiktok.com/@jahitsini"],
+                    ["youtubeUrl", "YouTube", Youtube, "https://youtube.com/@jahitsini"],
+                  ] as const).map(([key, label, Icon, placeholder]) => (
+                    <div key={key} className="space-y-1.5">
+                      <label className="text-sm font-medium text-brand-text flex items-center gap-1.5">
+                        <Icon className="h-3.5 w-3.5 text-slate-400" />
+                        {label}
+                      </label>
+                      <Input
+                        placeholder={placeholder}
+                        value={cfg[key]}
+                        onChange={(e) => setCfg((c) => ({ ...c, [key]: e.target.value }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end pt-2">
                 <Button type="submit" disabled={savingInfo} className="w-full sm:w-auto">
                   {savingInfo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -317,47 +320,6 @@ export default function AdminSettingsPage() {
             </form>
           </CardContent>
         </Card>
-
-          <Card>
-            <CardHeader className="pb-4 flex-row flex-wrap items-start justify-between gap-3">
-              <div>
-                <CardTitle className="text-lg">Notifikasi Admin</CardTitle>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Pemberitahuan untuk aktivitas sistem
-                </p>
-              </div>
-              <Badge variant="success">
-                <Bell className="h-3 w-3" />
-                Aktif
-              </Badge>
-            </CardHeader>
-            <CardContent className="pt-0 space-y-3">
-              {notifOptions.map((o) => (
-                // Seluruh baris jadi satu tombol sentuh (label), bukan cuma sakelarnya —
-                // jauh lebih mudah dipencet di layar HP yang kecil.
-                <label
-                  key={o.key}
-                  className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-brand-border hover:bg-brand-bg/60 active:bg-brand-bg transition-colors cursor-pointer select-none"
-                >
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold text-brand-text">{o.title}</div>
-                    <div className="text-xs text-slate-500">{o.desc}</div>
-                  </div>
-                  <span className="relative inline-flex h-6 w-11 items-center shrink-0">
-                    <input
-                      type="checkbox"
-                      checked={cfg[o.key] as boolean}
-                      disabled={savingNotif === o.key}
-                      onChange={(e) => handleToggleNotif(o.key, e.target.checked)}
-                      className="peer sr-only"
-                    />
-                    <span className="w-full h-full bg-brand-border rounded-full peer-checked:bg-brand-green transition-colors" />
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-soft peer-checked:translate-x-5 transition-transform" />
-                  </span>
-                </label>
-              ))}
-            </CardContent>
-          </Card>
 
           <Card className="bg-gradient-to-br from-white via-brand-bg/40 to-green-50 border-brand-green/20">
             <CardContent className="p-5 flex items-center gap-3">

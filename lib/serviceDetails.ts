@@ -78,7 +78,7 @@ const genericFaqs: ServiceFaq[] = [
   {
     question: "Bagaimana cara memantau pesanan saya?",
     answer:
-      "Setelah pesanan dibuat kamu mendapat nomor pesanan. Masukkan nomor itu di halaman Lacak Pesanan untuk melihat tahap pengerjaan terbaru.",
+      "Tanyakan perkembangan pesananmu kapan saja lewat WhatsApp kami. Cukup sebutkan nama dan layanan yang dipesan.",
   },
   {
     question: "Bagaimana kalau hasilnya tidak sesuai?",

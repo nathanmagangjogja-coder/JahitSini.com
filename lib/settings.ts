@@ -7,12 +7,14 @@ export interface BusinessSettings {
   address: string;
   operatingHours: string;
   websiteUrl: string;
+  /** Tautan profil sosial media (kosong = ikon disembunyikan di footer). */
+  instagramUrl: string;
+  facebookUrl: string;
+  tiktokUrl: string;
+  youtubeUrl: string;
   /** Koordinat lokasi workshop untuk peta embed di halaman Hubungi Kami. */
   mapLat: number | null;
   mapLng: number | null;
-  notifyNewOrderEmail: boolean;
-  notifyUrgentWhatsapp: boolean;
-  notifyDailyReport: boolean;
   /** Sisi terpanjang maksimum (px) untuk foto yang diunggah (pakaian & foto website). */
   photoMaxDimension: number;
   /** URL logo header & favicon (diunggah admin ke bucket brand-assets). Kosong = pakai bawaan. */
@@ -37,17 +39,18 @@ function isBrowser(): boolean {
 
 function envDefaults(): BusinessSettings {
   return {
-    whatsapp: process.env.BUSINESS_WHATSAPP || process.env.NEXT_PUBLIC_BUSINESS_WHATSAPP || "",
-    phone: process.env.BUSINESS_PHONE || "",
-    email: process.env.BUSINESS_EMAIL || "",
-    address: process.env.BUSINESS_ADDRESS || "",
+    whatsapp: "",
+    phone: "",
+    email: "",
+    address: "",
     operatingHours: "Senin-Jumat: 08.00-17.00",
     websiteUrl: process.env.NEXT_PUBLIC_SITE_URL || "",
+    instagramUrl: "",
+    facebookUrl: "",
+    tiktokUrl: "",
+    youtubeUrl: "",
     mapLat: null,
     mapLng: null,
-    notifyNewOrderEmail: true,
-    notifyUrgentWhatsapp: true,
-    notifyDailyReport: false,
     photoMaxDimension: 1600,
   };
 }
@@ -71,8 +74,8 @@ function saveLocalSettings(input: Partial<BusinessSettings>): boolean {
 
 /**
  * Ambil pengaturan bisnis. Dipakai baik di Server Component (Footer, halaman
- * Hubungi Kami) maupun Client Component (form admin/settings). Kalau Supabase
- * belum dikonfigurasi atau baris belum ada, fallback ke env var BUSINESS_*.
+ * Hubungi Kami) maupun Client Component (form admin/settings). Semua data kontak &
+ * sosial media diatur dari Admin > Pengaturan (tabel business_settings).
  */
 export async function getBusinessSettingsRemote(): Promise<BusinessSettings> {
   const local = getLocalSettings();
@@ -98,13 +101,14 @@ export async function getBusinessSettingsRemote(): Promise<BusinessSettings> {
     address: data.address ?? local.address ?? fallback.address,
     operatingHours: data.operating_hours ?? local.operatingHours ?? fallback.operatingHours,
     websiteUrl: data.website_url ?? local.websiteUrl ?? fallback.websiteUrl,
+    instagramUrl: data.instagram_url ?? local.instagramUrl ?? "",
+    facebookUrl: data.facebook_url ?? local.facebookUrl ?? "",
+    tiktokUrl: data.tiktok_url ?? local.tiktokUrl ?? "",
+    youtubeUrl: data.youtube_url ?? local.youtubeUrl ?? "",
     // Angka dari Supabase kadang datang sebagai string tergantung tipe kolom,
     // jadi di-parse dulu supaya peta tidak gagal muncul hanya karena typeof-nya "string".
     mapLat: parseCoordValue(data.map_lat) ?? local.mapLat ?? fallback.mapLat,
     mapLng: parseCoordValue(data.map_lng) ?? local.mapLng ?? fallback.mapLng,
-    notifyNewOrderEmail: data.notify_new_order_email ?? local.notifyNewOrderEmail ?? true,
-    notifyUrgentWhatsapp: data.notify_urgent_whatsapp ?? local.notifyUrgentWhatsapp ?? true,
-    notifyDailyReport: data.notify_daily_report ?? local.notifyDailyReport ?? false,
     photoMaxDimension:
       data.photo_max_dimension ?? local.photoMaxDimension ?? fallback.photoMaxDimension,
     logoUrl: data.logo_url || undefined,
@@ -152,12 +156,7 @@ export function buildWhatsAppLink(
   settings: Partial<BusinessSettings>,
   message?: string
 ): string | null {
-  const rawNumber =
-    settings.whatsapp ||
-    process.env.BUSINESS_WHATSAPP ||
-    process.env.NEXT_PUBLIC_BUSINESS_WHATSAPP ||
-    "";
-  const formatted = formatWhatsAppNumber(rawNumber);
+  const formatted = formatWhatsAppNumber(settings.whatsapp);
   if (!formatted) return null;
   const baseUrl = `https://wa.me/${formatted}`;
   if (!message) return baseUrl;
